@@ -8,12 +8,28 @@ import javax.persistence.*;
 public class AccountEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    long id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pk_accounts_sequence")
+    @SequenceGenerator(
+            name = "pk_accounts_sequence",
+            sequenceName = "accounts_id_seq",
+            initialValue = 1,
+            allocationSize = 1)
+    private long id;
 
     @Column
-    long account;
+    private long account;
 
+    @Column
+    private String accountName;
+
+    @Column(name = "last_operation")
+    private String operation;
+
+    @Column
+    private Long operationAmount;
+
+//    @Column(precision=19, scale=6)
+//    BigDecimal money;
 
     public AccountEntity() {
     }
@@ -31,11 +47,38 @@ public class AccountEntity {
         this.account = account;
     }
 
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
+    }
+
+    public String getOperation() {
+        return operation;
+    }
+
+    public void setOperation(String lastOperation) {
+        this.operation = lastOperation;
+    }
+
+    public Long getOperationAmount() {
+        return operationAmount;
+    }
+
+    public void setOperationAmount(Long operationAmount) {
+        this.operationAmount = operationAmount;
+    }
+
     @Override
     public String toString() {
         return "AccountEntity{" +
                 "id=" + id +
                 ", account=" + account +
+                ", accountName='" + accountName + '\'' +
+                ", operation='" + operation + '\'' +
+                ", amount='" + operationAmount + '\'' +
                 '}';
     }
 }

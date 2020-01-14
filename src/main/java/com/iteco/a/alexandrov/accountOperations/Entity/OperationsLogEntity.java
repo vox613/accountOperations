@@ -7,7 +7,12 @@ import javax.persistence.*;
 public class OperationsLogEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pk_operations_sequence")
+    @SequenceGenerator(
+            name = "pk_operations_sequence",
+            sequenceName = "operations_id_seq",
+            initialValue = 1,
+            allocationSize = 1)
     private long id;
 
     @Column
@@ -16,16 +21,16 @@ public class OperationsLogEntity {
     @Column(nullable = false)
     private String requestType;
 
-    @Column
+    @Column()
     private String operation;
 
-    @Column(nullable = false)
+    @Column()
     private long transactionAmount;
 
-    @Column(nullable = false)
+    @Column()
     private long accountBeforeOperations;
 
-    @Column(nullable = false)
+    @Column()
     private long accountAfterOperations;
 
     public OperationsLogEntity() {
