@@ -10,16 +10,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
 
-//    @Modifying
-//    @Query("UPDATE AccountEntity acc SET  acc.account = :account, acc.accountName = :name, acc.operation = :operation, acc.operationAmount = :operationAmount WHERE acc.id = :id")
-//    int updateAccount(@Param("id") long id, @Param("account") String account, @Param("account") AccountEntity account,@Param("account") AccountEntity account,@Param("account") AccountEntity account,);
-//
     @Modifying
-    @Query("UPDATE AccountEntity acc SET acc.account = :account WHERE acc.id = :id")
-    int updateAccountValue(@Param("id") long id, @Param("account") long account);
+    @Query("UPDATE AccountEntity acc SET acc.account = :account, acc.accountName = :accountName WHERE acc.id = :id")
+    void updateAccount(@Param("id") long id, @Param("account") long account, @Param("accountName") String accountName);
 
-    @Modifying
-    @Query("UPDATE AccountEntity acc SET acc.operation = :operation, acc.operationAmount = :amountOp WHERE acc.id = :id")
-    int patchAccount(@Param("id") long id, @Param("operation") String operation, @Param("amountOp") long amountOp);
 
 }

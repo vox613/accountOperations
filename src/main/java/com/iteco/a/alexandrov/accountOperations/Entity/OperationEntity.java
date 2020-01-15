@@ -1,10 +1,11 @@
 package com.iteco.a.alexandrov.accountOperations.Entity;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 
 @Entity
 @Table(name = "operations_history")
-public class OperationsLogEntity {
+public class OperationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pk_operations_sequence")
@@ -15,25 +16,18 @@ public class OperationsLogEntity {
             allocationSize = 1)
     private long id;
 
-    @Column
+    @Column(nullable = false)
     private long accountId;
 
     @Column(nullable = false)
-    private String requestType;
-
-    @Column()
     private String operation;
 
-    @Column()
+    @Column(nullable = false)
+    @Min(value = 0L)
     private long transactionAmount;
 
-    @Column()
-    private long accountBeforeOperations;
 
-    @Column()
-    private long accountAfterOperations;
-
-    public OperationsLogEntity() {
+    public OperationEntity() {
     }
 
     public long getId() {
@@ -68,35 +62,13 @@ public class OperationsLogEntity {
         this.transactionAmount = transactionAmount;
     }
 
-    public long getAccountBeforeOperations() {
-        return accountBeforeOperations;
-    }
-
-    public void setAccountBeforeOperations(long accountBeforeOperations) {
-        this.accountBeforeOperations = accountBeforeOperations;
-    }
-
-    public long getAccountAfterOperations() {
-        return accountAfterOperations;
-    }
-
-    public void setAccountAfterOperations(long accountAfterOperations) {
-        this.accountAfterOperations = accountAfterOperations;
-    }
-
-    public String getRequestType() {
-        return requestType;
-    }
-
-    public void setRequestType(String requestType) {
-        this.requestType = requestType;
-    }
-
     @Override
     public String toString() {
-        return "OperationsLogEntity{" +
+        return "OperationEntity{" +
                 "id=" + id +
+                ", accountId=" + accountId +
                 ", operation='" + operation + '\'' +
+                ", transactionAmount=" + transactionAmount +
                 '}';
     }
 }

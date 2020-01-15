@@ -22,11 +22,6 @@ public class AccountEntity {
     @Column
     private String accountName;
 
-    @Column(name = "last_operation")
-    private String operation;
-
-    @Column
-    private Long operationAmount;
 
 //    @Column(precision=19, scale=6)
 //    BigDecimal money;
@@ -55,30 +50,12 @@ public class AccountEntity {
         this.accountName = accountName;
     }
 
-    public String getOperation() {
-        return operation;
-    }
-
-    public void setOperation(String lastOperation) {
-        this.operation = lastOperation;
-    }
-
-    public Long getOperationAmount() {
-        return operationAmount;
-    }
-
-    public void setOperationAmount(Long operationAmount) {
-        this.operationAmount = operationAmount;
-    }
-
     @Override
     public String toString() {
-        return "AccountEntity{" +
-                "id=" + id +
-                ", account=" + account +
-                ", accountName='" + accountName + '\'' +
-                ", operation='" + operation + '\'' +
-                ", amount='" + operationAmount + '\'' +
+        return "{" +
+                "id:" + id +
+                ", account:" + account +
+                ", accountName:'" + accountName + '\'' +
                 '}';
     }
 }

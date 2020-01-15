@@ -1,15 +1,20 @@
 INSERT INTO accounts_table (id, account, account_name)
-VALUES (nextval('accounts_id_seq'), 1, 'acc1'),
-       (nextval('accounts_id_seq'), 2, 'acc2'),
-       (nextval('accounts_id_seq'), 3, 'acc3');
+VALUES (nextval('accounts_id_seq'), 0, 'acc1'),
+       (nextval('accounts_id_seq'), 0, 'acc2'),
+       (nextval('accounts_id_seq'), 0, 'acc3');
 
 
 
-INSERT INTO operations_history (id, account_id,  request_type, operation, transaction_amount, account_before_operations, account_after_operations)
-VALUES (nextval('operations_id_seq'), 1, 'GET', 'view', NULL, (SELECT account FROM accounts_table WHERE id = 1), (SELECT account FROM accounts_table WHERE id = 1)),
-        (nextval('operations_id_seq'), 2, 'POST', 'create', 2, 0, 2),
-        (nextval('operations_id_seq'), 2, 'PUT', 'sum', 1000, (SELECT account FROM accounts_table WHERE id = 2), (SELECT account FROM accounts_table WHERE id = 2)+1000);
+-- INSERT INTO operations_history (id, account_id, operation, transaction_amount, account_before_operations, account_after_operations)
+-- VALUES  (nextval('operations_id_seq'), 1, 'sum', 1, (SELECT account FROM accounts_table WHERE id = 1), (SELECT account FROM accounts_table WHERE id = 1) + 1),
+--         (nextval('operations_id_seq'), 2, 'sub', 2, (SELECT account FROM accounts_table WHERE id = 2), (SELECT account FROM accounts_table WHERE id = 2) + 2),
+--         (nextval('operations_id_seq'), 2, 'sum', 3, (SELECT account FROM accounts_table WHERE id = 3), (SELECT account FROM accounts_table WHERE id = 3) + 3);
 --
+
+
+
+
+
 -- INSERT INTO condition (id, name)
 -- VALUES (nextval('condition_id_seq'), 'идеальное'),
 --        (nextval('condition_id_seq'), 'хорошее'),
