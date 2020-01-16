@@ -1,7 +1,7 @@
-INSERT INTO accounts_table (id, account, account_name)
-VALUES (nextval('accounts_id_seq'), 0, 'acc1'),
-       (nextval('accounts_id_seq'), 0, 'acc2'),
-       (nextval('accounts_id_seq'), 0, 'acc3');
+INSERT INTO wallets_table (id, account, wallet_name, create_date_time)
+VALUES (nextval('wallet_id_seq'), 1, 'acc1', CURRENT_TIMESTAMP),
+       (nextval('wallet_id_seq'), 0, 'acc2', CURRENT_TIMESTAMP),
+       (nextval('wallet_id_seq'), 0, 'acc3', CURRENT_TIMESTAMP);
 
 
 
@@ -11,6 +11,8 @@ VALUES (nextval('accounts_id_seq'), 0, 'acc1'),
 --         (nextval('operations_id_seq'), 2, 'sum', 3, (SELECT account FROM accounts_table WHERE id = 3), (SELECT account FROM accounts_table WHERE id = 3) + 3);
 --
 
+INSERT INTO journal (id, wallet_id, wallet_name, transaction_type, transaction_amount, wallet_account_after_transaction, transactional_date)
+VALUES  (nextval('transactional_id_seq'), 1, (SELECT wallet_name FROM wallets_table WHERE id = 1), 'sum', 1, (SELECT account FROM wallets_table WHERE id = 1), CURRENT_TIMESTAMP);
 
 
 

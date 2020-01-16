@@ -1,4 +1,4 @@
-package com.iteco.a.alexandrov.accountOperations.Errors;
+package com.iteco.a.alexandrov.accountOperations.Error;
 
 public class CustomErrorResponse {
     private String errorMessage;
