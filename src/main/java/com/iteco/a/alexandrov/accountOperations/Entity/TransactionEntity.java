@@ -1,5 +1,6 @@
 package com.iteco.a.alexandrov.accountOperations.Entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Length;
 
@@ -7,6 +8,7 @@ import javax.persistence.*;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Entity
@@ -44,7 +46,9 @@ public class TransactionEntity {
 
     @Column
     @UpdateTimestamp
+    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
     private LocalDateTime transactionalDate;
+
 
     public TransactionEntity() {
     }

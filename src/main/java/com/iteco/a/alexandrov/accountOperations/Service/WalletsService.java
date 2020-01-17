@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -14,14 +13,13 @@ public interface WalletsService {
 
     ResponseEntity<List<WalletEntity>> findAllWallets();
 
-    ResponseEntity<?> readWallet(long id);
+    ResponseEntity<?> readWallet(long id) throws Throwable;
 
-    ResponseEntity<?> createWallet(WalletEntity newWallet);
+    ResponseEntity<?> createWallet(WalletEntity newWallet) throws Throwable;
 
-    @Transactional
-    ResponseEntity<?> updateWallet(long id, WalletEntity newAccount);
+    ResponseEntity<?> updateWallet(long id, WalletEntity newAccount) throws Throwable;
 
-    ResponseEntity<?> deleteWallet(long id);
+    ResponseEntity<?> deleteWallet(long id) throws Throwable;
 
     ResponseEntity<?> deleteAllWallets();
 

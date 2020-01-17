@@ -16,5 +16,7 @@ public interface WalletsRepository extends JpaRepository<WalletEntity, Long> {
     @Query("UPDATE WalletEntity acc SET acc.account = :account, acc.walletName = :walletName WHERE acc.id = :id")
     void updateWallet(@Param("id") long id, @Param("account") BigDecimal account, @Param("walletName") String walletName);
 
+    boolean existsByWalletName(String walletName);
+
 
 }

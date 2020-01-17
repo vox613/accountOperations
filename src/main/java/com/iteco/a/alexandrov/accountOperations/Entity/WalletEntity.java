@@ -1,7 +1,9 @@
 package com.iteco.a.alexandrov.accountOperations.Entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.UniqueElements;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -28,13 +30,14 @@ public class WalletEntity {
     @Column(precision = 16, scale = 2)
     private BigDecimal account;
 
-    @Column
     @NotBlank
     @Length(max = 16)
+    @Column(unique = true)
     private String walletName;
 
     @Column
     @CreationTimestamp
+    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
     private LocalDateTime createDateTime;
 
 

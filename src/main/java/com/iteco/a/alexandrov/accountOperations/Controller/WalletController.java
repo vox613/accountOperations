@@ -37,22 +37,25 @@ public class WalletController {
     }
 
     @GetMapping("/wallets/{id}")
-    ResponseEntity<?> readWalletById(@PathVariable long id) {
+    ResponseEntity<?> readWalletById(@PathVariable long id) throws Throwable {
         return walletsService.readWallet(id);
     }
 
     @PostMapping("/wallets")
-    ResponseEntity<?> createNewWallet(@Valid @RequestBody WalletEntity newWallet) {
+    ResponseEntity<?> createNewWallet(@Valid @RequestBody WalletEntity newWallet) throws Throwable {
+        log.info("Create Wallet");
         return walletsService.createWallet(newWallet);
     }
 
     @PutMapping(value = "/wallets/{id}")
-    public ResponseEntity<?> updateWallet(@PathVariable long id, @Valid @RequestBody WalletEntity wallet) {
+    public ResponseEntity<?> updateWallet(@PathVariable long id, @Valid @RequestBody WalletEntity wallet) throws Throwable {
+        log.info("Update Wallet with id = {}", id);
         return walletsService.updateWallet(id, wallet);
     }
 
     @DeleteMapping(value = "/wallets/{id}")
-    public ResponseEntity<?> deleteWallet(@PathVariable("id") long id) {
+    public ResponseEntity<?> deleteWallet(@PathVariable("id") long id) throws Throwable {
+        log.info("Delete Wallet with id = {}", id);
         return walletsService.deleteWallet(id);
     }
 
@@ -65,33 +68,30 @@ public class WalletController {
 
 
     @GetMapping("/wallets/transactions")
-    ResponseEntity<List<TransactionEntity>> readAllTransactionsOfAllWallets() {
+    public ResponseEntity<List<TransactionEntity>> readAllTransactionsOfAllWallets() {
         return transactionsService.findAllTransactionsFromAllWallets();
     }
 
     @GetMapping("/wallets/{id}/transactions")
-    ResponseEntity<List<TransactionEntity>> readAllTransactionsFromWalletId(@PathVariable long id) {
+    public ResponseEntity<List<TransactionEntity>> readAllTransactionsFromWalletId(@PathVariable long id) {
         return transactionsService.findAllTransactionsFromWalletId(id);
     }
 
     @GetMapping("/wallets/transactions/{id}")
-    ResponseEntity<?> readTransactionIdFromAllWallets(@PathVariable long id) {
+    public ResponseEntity<?> readTransactionIdFromAllWallets(@PathVariable long id) throws Throwable {
         return transactionsService.findTransactionIdFromAllWallets(id);
     }
 
     @GetMapping("/wallets/{idWallet}/transactions/{idTransaction}")
-    ResponseEntity<?> readTransactionIdFromWalletId(@PathVariable long idWallet, @PathVariable long idTransaction) {
+    public ResponseEntity<?> readTransactionIdFromWalletId(@PathVariable long idWallet, @PathVariable long idTransaction) throws Throwable {
         return transactionsService.findTransactionIdFromWalletId(idWallet, idTransaction);
     }
 
     @PostMapping("/wallets/transactions")
-    ResponseEntity<?> readTransactionIdFromWalletId(@Valid @RequestBody TransactionModel transactionModel) {
-        System.out.println(">>> " + transactionModel);
+    public ResponseEntity<?> readTransactionIdFromWalletId(@Valid @RequestBody TransactionModel transactionModel) throws Throwable {
+        log.info("Create new transaction for Wallet with id = {}", transactionModel.getWalletId());
         return transactionsService.createTransaction(transactionModel);
     }
-
-
-// TODO: 16.01.2020 Delete not used URLS
 
 
 }

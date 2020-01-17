@@ -12,10 +12,13 @@ public interface TransactionsService {
     Logger log = LoggerFactory.getLogger(TransactionsService.class);
 
     ResponseEntity<List<TransactionEntity>> findAllTransactionsFromAllWallets();
-    ResponseEntity<List<TransactionEntity>> findAllTransactionsFromWalletId(long id);
-    ResponseEntity<?> findTransactionIdFromAllWallets(long id);
-    ResponseEntity<?> findTransactionIdFromWalletId(long idWallet, long idTransaction);
-    ResponseEntity<?> createTransaction(TransactionModel transactionModel);
 
-    // TODO: 16.01.2020 put unity methods here
+    ResponseEntity<List<TransactionEntity>> findAllTransactionsFromWalletId(long id);
+
+    ResponseEntity<?> findTransactionIdFromAllWallets(long id) throws Throwable;
+
+    ResponseEntity<?> findTransactionIdFromWalletId(long idWallet, long idTransaction) throws Throwable;
+
+    ResponseEntity<?> createTransaction(TransactionModel transactionModel) throws Throwable;
+
 }

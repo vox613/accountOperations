@@ -10,7 +10,9 @@ import java.util.Optional;
 @Repository
 public interface TransactionsRepository extends JpaRepository<TransactionEntity, Long> {
 
+
     List<TransactionEntity> findAllByWalletId(long id);
 
     Optional<TransactionEntity> findTransactionEntitiesByIdAndWalletId(long transactionId, long walletId);
+
 }
