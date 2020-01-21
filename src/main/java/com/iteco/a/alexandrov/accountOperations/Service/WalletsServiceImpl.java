@@ -2,7 +2,7 @@ package com.iteco.a.alexandrov.accountOperations.Service;
 
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
-import com.iteco.a.alexandrov.accountOperations.Exceptions.*;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Repository.WalletsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +34,7 @@ public class WalletsServiceImpl implements WalletsService {
     }
 
     @Override
-    public ResponseEntity<?> readWallet(long id) throws Throwable {
+    public ResponseEntity<?> readWallet(long id) throws MyWalletException {
         Optional<WalletEntity> walletEntityOptional = walletsRepository.findById(id);
         if (walletEntityOptional.isPresent()) {
             return new ResponseEntity<>(walletEntityOptional.get(), HttpStatus.OK);
@@ -43,10 +45,10 @@ public class WalletsServiceImpl implements WalletsService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = Throwable.class)
-    public ResponseEntity<?> createWallet(WalletEntity newWallet) throws Throwable {
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyWalletException.class)
+    public ResponseEntity<?> createWallet(WalletEntity newWallet) throws MyWalletException {
         log.warn("Wallet = " + newWallet);
-        if(checkWalletWithSameNameExist(newWallet.getWalletName())){
+        if (checkWalletWithSameNameExist(newWallet.getWalletName())) {
             log.warn("Created wallet: = " + newWallet);
             throw new MyWalletException("Wallet with same name exist!", HttpStatus.UNPROCESSABLE_ENTITY);
         }
@@ -54,7 +56,7 @@ public class WalletsServiceImpl implements WalletsService {
         return new ResponseEntity<>(save, HttpStatus.CREATED);
     }
 
-    private boolean checkWalletWithSameNameExist(String walletName){
+    private boolean checkWalletWithSameNameExist(String walletName) {
         return walletsRepository.existsByWalletName(walletName);
     }
 
@@ -65,16 +67,17 @@ public class WalletsServiceImpl implements WalletsService {
 
 
     @Override
-    public ResponseEntity<?> updateWallet(long id, WalletEntity newWallet) throws Throwable {
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.DEFAULT, rollbackFor = MyWalletException.class)
+    public ResponseEntity<?> updateWallet(long id, WalletEntity newWallet) throws MyWalletException {
         log.info("Updating Wallet with id {}", id);
 
         Optional<WalletEntity> walletEntityOptional = walletsRepository.findById(id);
 
         if (walletEntityOptional.isPresent()) {
             WalletEntity oldWalletEntity = walletEntityOptional.get();
-
             oldWalletEntity.setAccount(newWallet.getAccount());
             oldWalletEntity.setWalletName(newWallet.getWalletName());
+
 
             walletsRepository.updateWallet(oldWalletEntity.getId(), oldWalletEntity.getAccount(),
                     oldWalletEntity.getWalletName());
@@ -88,7 +91,7 @@ public class WalletsServiceImpl implements WalletsService {
     }
 
     @Override
-    public ResponseEntity<?> deleteWallet(long id) throws Throwable {
+    public ResponseEntity<?> deleteWallet(long id) throws MyWalletException {
         log.info("Deleting User with id {}", id);
 
         Optional<WalletEntity> optionalWalletEntity = walletsRepository.findById(id);

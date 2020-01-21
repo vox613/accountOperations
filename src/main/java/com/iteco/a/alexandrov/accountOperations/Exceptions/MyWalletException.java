@@ -5,8 +5,6 @@ import org.springframework.http.HttpStatus;
 public class MyWalletException extends Exception {
     private HttpStatus httpStatus;
 
-
-
     public MyWalletException(HttpStatus httpStatus) {
         this.httpStatus = httpStatus;
     }

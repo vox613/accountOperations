@@ -10,8 +10,16 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class MyExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(value = {MyWalletException.class, MyTransactionException.class})
-    protected ResponseEntity<CustomErrorResponse> handleWalletException(MyWalletException ex) {
+    @ExceptionHandler(value = {MyWalletException.class})
+    public ResponseEntity<CustomErrorResponse> handleWalletException(MyWalletException ex) {
+        logger.error(ex.toString());
+        HttpStatus status = ex.getHttpStatus();
+        CustomErrorResponse errorDetails = new CustomErrorResponse(ex.getMessage());
+        return new ResponseEntity<>(errorDetails, status);
+    }
+
+    @ExceptionHandler(value = {MyTransactionException.class})
+    public ResponseEntity<CustomErrorResponse> handleTransactionalException(MyTransactionException ex) {
         logger.error(ex.toString());
         HttpStatus status = ex.getHttpStatus();
         CustomErrorResponse errorDetails = new CustomErrorResponse(ex.getMessage());

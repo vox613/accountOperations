@@ -8,7 +8,6 @@ import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
 import com.iteco.a.alexandrov.accountOperations.Repository.TransactionsRepository;
 import com.iteco.a.alexandrov.accountOperations.Repository.WalletsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -16,8 +15,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +25,7 @@ public class TransactionsServiceImpl implements TransactionsService {
     private TransactionsRepository transactionsRepository;
     private WalletsRepository walletsRepository;
     private WalletsServiceImpl walletsService;
+
 
     @Autowired
     public TransactionsServiceImpl(TransactionsRepository transactionsRepository, WalletsRepository walletsRepository, WalletsServiceImpl walletsService) {
@@ -49,18 +47,19 @@ public class TransactionsServiceImpl implements TransactionsService {
 
 
     @Override
-    public ResponseEntity<?> findTransactionIdFromAllWallets(long id) throws Throwable {
+    public ResponseEntity<?> findTransactionIdFromAllWallets(long id) throws MyTransactionException {
         Optional<TransactionEntity> operationEntityOptional = transactionsRepository.findById(id);
-        if (!operationEntityOptional.isPresent()) {
+        if (operationEntityOptional.isPresent()) {
+            return new ResponseEntity<>(operationEntityOptional.get(), HttpStatus.OK);
+        } else {
             log.error("Operation with id {} not found.", id);
             throw new MyTransactionException(String.format("Operation with id: %d not found!", id), HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(operationEntityOptional.get(), HttpStatus.OK);
     }
 
 
     @Override
-    public ResponseEntity<?> findTransactionIdFromWalletId(long idWallet, long idTransaction) throws Throwable {
+    public ResponseEntity<?> findTransactionIdFromWalletId(long idWallet, long idTransaction) throws MyTransactionException {
         Optional<TransactionEntity> transactionEntityOptional = transactionsRepository.findTransactionEntitiesByIdAndWalletId(idTransaction, idWallet);
 
         if (!transactionEntityOptional.isPresent()) {
@@ -72,8 +71,9 @@ public class TransactionsServiceImpl implements TransactionsService {
 
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = Throwable.class)
-    public ResponseEntity<?> createTransaction(TransactionModel transactionModel) throws Throwable {
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.DEFAULT, rollbackFor = MyTransactionException.class)
+    public ResponseEntity<?> createTransaction(TransactionModel transactionModel) throws MyTransactionException {
+
         WalletEntity walletEntity = checkWalletExist(transactionModel.getWalletId());
 
         String operation = transactionModel.getTransactionType().toLowerCase();
@@ -89,17 +89,13 @@ public class TransactionsServiceImpl implements TransactionsService {
         return walletsService.responseCreater("Success transaction!", HttpStatus.CREATED);
     }
 
-    private void throwEx() throws Throwable {
-        throw new MyTransactionException("throwEx", HttpStatus.BAD_REQUEST);
+
+    private WalletEntity checkWalletExist(Long walletId) throws MyTransactionException {
+        return walletsRepository.findById(walletId).orElseThrow(() ->
+                new MyTransactionException("Wallet by ID not found!", HttpStatus.NOT_FOUND));
     }
 
-
-    private WalletEntity checkWalletExist(Long walletId) throws Throwable {
-        Optional<WalletEntity> walletEntityOptional = walletsRepository.findById(walletId);
-        return walletEntityOptional.orElseThrow(() -> new MyTransactionException("Wallet by ID not found!", HttpStatus.NOT_FOUND));
-    }
-
-    private void checkCorrectTransactionOperation(String transactionType) throws Throwable {
+    private void checkCorrectTransactionOperation(String transactionType) throws MyTransactionException {
         if (Arrays.stream(AvailableTransactions.values()).noneMatch(x -> x.getValue().equals(transactionType))) {
             throw new MyTransactionException("Uncorrected operation!", HttpStatus.UNPROCESSABLE_ENTITY);
         }
@@ -114,7 +110,7 @@ public class TransactionsServiceImpl implements TransactionsService {
         walletsRepository.updateWallet(walletEntity.getId(), walletEntity.getAccount(), walletEntity.getWalletName());
     }
 
-    private void subTransactionExecution(WalletEntity walletEntity, TransactionModel transactionModel) throws Throwable {
+    private void subTransactionExecution(WalletEntity walletEntity, TransactionModel transactionModel) throws MyTransactionException {
         if (checkWalletEnoughFunds(transactionModel.getTransactionAmount(), walletEntity.getAccount())) {
             walletEntity.setAccount(walletEntity.getAccount().subtract(transactionModel.getTransactionAmount()));
             walletsRepository.updateWallet(walletEntity.getId(), walletEntity.getAccount(), walletEntity.getWalletName());
