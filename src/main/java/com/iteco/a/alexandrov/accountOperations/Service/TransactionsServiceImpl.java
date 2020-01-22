@@ -4,6 +4,7 @@ import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
 import com.iteco.a.alexandrov.accountOperations.Enum.AvailableTransactions;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
 import com.iteco.a.alexandrov.accountOperations.Repository.TransactionsRepository;
 import com.iteco.a.alexandrov.accountOperations.Repository.WalletsRepository;
@@ -41,8 +42,12 @@ public class TransactionsServiceImpl implements TransactionsService {
     }
 
     @Override
-    public ResponseEntity<List<TransactionEntity>> findAllTransactionsFromWalletId(long id) {
-        return new ResponseEntity<>(transactionsRepository.findAllByWalletId(id), HttpStatus.OK);
+    public ResponseEntity<List<TransactionEntity>> findAllTransactionsFromWalletId(long id) throws MyWalletException {
+        if (walletsService.readWallet(id).getStatusCode().equals(HttpStatus.OK)) {
+            return new ResponseEntity<>(transactionsRepository.findAllByWalletId(id), HttpStatus.OK);
+        } else {
+            throw new MyWalletException("Wallet by ID not found!", HttpStatus.NOT_FOUND);
+        }
     }
 
 
@@ -59,19 +64,7 @@ public class TransactionsServiceImpl implements TransactionsService {
 
 
     @Override
-    public ResponseEntity<?> findTransactionIdFromWalletId(long idWallet, long idTransaction) throws MyTransactionException {
-        Optional<TransactionEntity> transactionEntityOptional = transactionsRepository.findTransactionEntitiesByIdAndWalletId(idTransaction, idWallet);
-
-        if (!transactionEntityOptional.isPresent()) {
-            log.error("Operation with id {} for account {} not found.", idTransaction, idWallet);
-            throw new MyTransactionException(String.format("Operation with id: %d for account %d not found!", idTransaction, idWallet), HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(transactionEntityOptional.get(), HttpStatus.OK);
-    }
-
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.DEFAULT, rollbackFor = MyTransactionException.class)
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyTransactionException.class)
     public ResponseEntity<?> createTransaction(TransactionModel transactionModel) throws MyTransactionException {
 
         WalletEntity walletEntity = checkWalletExist(transactionModel.getWalletId());

@@ -20,14 +20,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rest")
-public class WalletController {
+public class Controller {
 
-    private static final Logger log = LoggerFactory.getLogger(WalletController.class);
+    private static final Logger log = LoggerFactory.getLogger(Controller.class);
     private final WalletsServiceImpl walletsService;
     private final TransactionsServiceImpl transactionsService;
 
     @Autowired
-    WalletController(WalletsServiceImpl walletsService, TransactionsServiceImpl transactionsService) {
+    Controller(WalletsServiceImpl walletsService, TransactionsServiceImpl transactionsService) {
         this.walletsService = walletsService;
         this.transactionsService = transactionsService;
     }
@@ -69,14 +69,13 @@ public class WalletController {
     }
 
 
-
     @GetMapping("/wallets/transactions")
     public ResponseEntity<List<TransactionEntity>> readAllTransactionsOfAllWallets() {
         return transactionsService.findAllTransactionsFromAllWallets();
     }
 
     @GetMapping("/wallets/{id}/transactions")
-    public ResponseEntity<List<TransactionEntity>> readAllTransactionsFromWalletId(@PathVariable long id) {
+    public ResponseEntity<List<TransactionEntity>> readAllTransactionsFromWalletId(@PathVariable long id) throws MyWalletException {
         return transactionsService.findAllTransactionsFromWalletId(id);
     }
 
@@ -85,16 +84,11 @@ public class WalletController {
         return transactionsService.findTransactionIdFromAllWallets(id);
     }
 
-    @GetMapping("/wallets/{idWallet}/transactions/{idTransaction}")
-    public ResponseEntity<?> readTransactionIdFromWalletId(@PathVariable long idWallet, @PathVariable long idTransaction) throws MyTransactionException {
-        return transactionsService.findTransactionIdFromWalletId(idWallet, idTransaction);
-    }
 
     @PostMapping("/wallets/transactions")
     public ResponseEntity<?> readTransactionIdFromWalletId(@Valid @RequestBody TransactionModel transactionModel) throws MyTransactionException {
         log.info("Create new transaction for Wallet with id = {}", transactionModel.getWalletId());
         return transactionsService.createTransaction(transactionModel);
     }
-
 
 }

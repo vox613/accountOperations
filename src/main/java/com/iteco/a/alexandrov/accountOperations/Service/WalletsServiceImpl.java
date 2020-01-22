@@ -12,8 +12,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,7 +65,7 @@ public class WalletsServiceImpl implements WalletsService {
 
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.DEFAULT, rollbackFor = MyWalletException.class)
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyWalletException.class)
     public ResponseEntity<?> updateWallet(long id, WalletEntity newWallet) throws MyWalletException {
         log.info("Updating Wallet with id {}", id);
 

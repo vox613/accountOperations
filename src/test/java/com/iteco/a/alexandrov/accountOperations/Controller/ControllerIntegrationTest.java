@@ -3,16 +3,19 @@ package com.iteco.a.alexandrov.accountOperations.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
+import com.iteco.a.alexandrov.accountOperations.Repository.TransactionsRepository;
 import com.iteco.a.alexandrov.accountOperations.Repository.WalletsRepository;
-import org.junit.jupiter.api.Order;
+import com.iteco.a.alexandrov.accountOperations.Service.TransactionsServiceImpl;
+import com.iteco.a.alexandrov.accountOperations.Service.WalletsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,7 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class WalletControllerIntegrationTest {
+@TestPropertySource(locations = "classpath:application-test.properties")
+public class ControllerIntegrationTest {
 
 
     @Autowired
@@ -38,19 +42,23 @@ public class WalletControllerIntegrationTest {
     @Autowired
     private WalletsRepository walletsRepository;
 
+    @Autowired
+    private WalletsService walletsService;
+
+
+    @Autowired
+    private TransactionsRepository transactionsRepository;
+
+    @Autowired
+    private TransactionsServiceImpl transactionsService;
+
     private final long idExistWallet = 1;
     private final long idNotExistWallet = 5;
 
 
-
-
-////////////////////////////////////////////
-//              GET all
-///////////////////////////////////////////
-
+// =========================================== GET all wallets ==========================================
 
     @Test
-    @Order(1)
     public void testGetAllWallet_whenGetAllWallet_thenHttp200_andJsonArrayList() throws Exception {
         MvcResult response = mockMvc.perform(get("/rest/wallets")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -66,14 +74,9 @@ public class WalletControllerIntegrationTest {
     }
 
 
-
-////////////////////////////////////////////
-//              GET by id
-///////////////////////////////////////////
-
+    // =========================================== GET wallet by id ==========================================
     @Test
-    @Order(2)
-    public void testGetWalletById_whenGetWalletById_thenHttp200_andJsonResponseEntity() throws Exception {
+    public void testGetWalletById_whenGetWalletById_thenHttp200_andJsonResponseEntity() throws Throwable {
         MvcResult response = mockMvc.perform(get("/rest/wallets/{id}", idExistWallet)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -86,7 +89,6 @@ public class WalletControllerIntegrationTest {
     }
 
     @Test
-    @Order(3)
     public void testGetWalletById_whenGetWalletById_isNotExist_thenHttp404_andJsonResponseMessage() throws Exception {
         mockMvc.perform(get("/rest/wallets/{id}", idNotExistWallet)
                 .contentType(MediaType.APPLICATION_JSON))
@@ -95,7 +97,6 @@ public class WalletControllerIntegrationTest {
     }
 
     @Test
-    @Order(4)
     public void testGetWalletById_whenGetWalletById_isNotExist_thenThrowMyWalletException() {
         try {
             mockMvc.perform(get("/rest/wallets/{id}", idNotExistWallet)
@@ -109,17 +110,13 @@ public class WalletControllerIntegrationTest {
     }
 
 
-////////////////////////////////////////////
-//              PUT
-///////////////////////////////////////////
-
+    // =========================================== Wallets PUT ==========================================
     @Test
-    @Order(5)
-    public void testPutWalletById_whenPutWalletById_thenHttp200_andJsonResponseEntity() throws Exception {
+    public void testPutWalletById_whenPutWalletById_thenHttp200_andJsonResponseEntity() throws Throwable {
 
         WalletEntity updatedWallet = new WalletEntity();
         updatedWallet.setWalletName("newNameForTest");
-        updatedWallet.setAccount(new BigDecimal(2000));
+        updatedWallet.setAccount(new BigDecimal(2000.05));
 
         mockMvc.perform(put("/rest/wallets/{id}", idExistWallet)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -132,7 +129,6 @@ public class WalletControllerIntegrationTest {
 
 
     @Test
-    @Order(6)
     public void testPutWalletById_whenPutWalletById_isNotExist_thenHttp404_andJsonResponseMessage() {
         WalletEntity updatedWallet = new WalletEntity();
         updatedWallet.setWalletName("newNameForTest");
@@ -151,14 +147,9 @@ public class WalletControllerIntegrationTest {
     }
 
 
-
-////////////////////////////////////////////
-//              POST
-///////////////////////////////////////////
-
-
+    // =========================================== Wallets POST =========================================
     @Test
-    @Order(7)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void testPostWalletById_whenPutWalletById_thenHttp201_andJsonResponseEntity() throws Exception {
         WalletEntity updatedWallet = new WalletEntity();
         updatedWallet.setWalletName("NameForTestPost");
@@ -178,10 +169,9 @@ public class WalletControllerIntegrationTest {
                 .andReturn();
     }
 
-    @Test
-    @Order(8)
-    public void testPostWallet_whenPostWalletWithAlreadyExistName_thenHttp422_andJsonResponseMessage() {
 
+    @Test
+    public void testPostWallet_whenPostWalletWithAlreadyExistName_thenHttp422_andJsonResponseMessage() {
         WalletEntity updatedWallet = new WalletEntity();
         updatedWallet.setWalletName("acc2");
         updatedWallet.setAccount(new BigDecimal(2000));
@@ -201,14 +191,9 @@ public class WalletControllerIntegrationTest {
     }
 
 
-
-////////////////////////////////////////////
-//              DELETE
-///////////////////////////////////////////
-
-
+    // =========================================== Wallets DELETE =========================================
     @Test
-    @Order(10)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void testDeleteAllWallet_whenDeleteAllWallet_thenHttp204() throws Exception {
 
         assertFalse(walletsRepository.findAll().isEmpty());
@@ -222,7 +207,7 @@ public class WalletControllerIntegrationTest {
     }
 
     @Test
-    @Order(9)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void testDeleteWalletById_whenDeleteWalletById_thenHttp200() throws Exception {
 
         WalletEntity walletEntity = walletsRepository.findById(idExistWallet).orElseThrow(Exception::new);

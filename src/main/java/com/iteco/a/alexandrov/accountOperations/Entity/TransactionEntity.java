@@ -1,8 +1,5 @@
 package com.iteco.a.alexandrov.accountOperations.Entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Length;
 
@@ -11,6 +8,7 @@ import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "journal")
@@ -47,7 +45,7 @@ public class TransactionEntity {
 
     @Column
     @UpdateTimestamp
-    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
+//    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
     private LocalDateTime transactionalDate;
 
     @Version
@@ -114,6 +112,10 @@ public class TransactionEntity {
         return transactionalDate;
     }
 
+    public void setTransactionalDate(LocalDateTime transactionalDate) {
+        this.transactionalDate = transactionalDate;
+    }
+
     public Long getVer() {
         return ver;
     }
@@ -122,16 +124,24 @@ public class TransactionEntity {
         this.ver = ver;
     }
 
+
     @Override
-    public String toString() {
-        return "TransactionEntity{" +
-                "id=" + id +
-                ", walletId=" + walletId +
-                ", walletName='" + walletName + '\'' +
-                ", transactionType='" + transactionType + '\'' +
-                ", transactionAmount=" + transactionAmount +
-                ", walletAccountAfterTransaction=" + walletAccountAfterTransaction +
-                ", transactionalDate=" + transactionalDate +
-                '}';
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TransactionEntity that = (TransactionEntity) o;
+        return id == that.id &&
+                walletId == that.walletId &&
+                walletName.equals(that.walletName) &&
+                transactionType.equals(that.transactionType) &&
+                transactionAmount.equals(that.transactionAmount) &&
+                Objects.equals(walletAccountAfterTransaction, that.walletAccountAfterTransaction) &&
+                transactionalDate.equals(that.transactionalDate) &&
+                Objects.equals(ver, that.ver);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, walletId, walletName, transactionType, transactionAmount, walletAccountAfterTransaction, transactionalDate, ver);
     }
 }
