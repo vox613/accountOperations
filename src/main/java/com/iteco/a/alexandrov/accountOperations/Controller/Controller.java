@@ -3,6 +3,7 @@ package com.iteco.a.alexandrov.accountOperations.Controller;
 
 import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
@@ -39,24 +40,24 @@ public class Controller {
     }
 
     @GetMapping("/wallets/{id}")
-    ResponseEntity<?> readWalletById(@PathVariable long id) throws MyWalletException {
+    ResponseEntity<WalletEntity> readWalletById(@PathVariable long id) throws MyWalletException {
         return walletsService.readWallet(id);
     }
 
     @PostMapping("/wallets")
-    ResponseEntity<?> createNewWallet(@Valid @RequestBody WalletEntity newWallet) throws MyWalletException {
+    ResponseEntity<WalletEntity> createNewWallet(@Valid @RequestBody WalletEntity newWallet) throws MyWalletException {
         log.info("Create Wallet");
         return walletsService.createWallet(newWallet);
     }
 
     @PutMapping(value = "/wallets/{id}")
-    public ResponseEntity<?> updateWallet(@PathVariable long id, @Valid @RequestBody WalletEntity wallet) throws MyWalletException {
+    public ResponseEntity<WalletEntity> updateWallet(@PathVariable long id, @Valid @RequestBody WalletEntity wallet) throws MyWalletException {
         log.info("Update Wallet with id = {}", id);
         return walletsService.updateWallet(id, wallet);
     }
 
     @DeleteMapping(value = "/wallets/{id}")
-    public ResponseEntity<?> deleteWallet(@PathVariable("id") long id) throws MyWalletException {
+    public ResponseEntity<WalletEntity> deleteWallet(@PathVariable("id") long id) throws MyWalletException {
         log.info("Delete Wallet with id = {}", id);
         return walletsService.deleteWallet(id);
     }
@@ -80,13 +81,13 @@ public class Controller {
     }
 
     @GetMapping("/wallets/transactions/{id}")
-    public ResponseEntity<?> readTransactionIdFromAllWallets(@PathVariable long id) throws MyTransactionException {
+    public ResponseEntity<TransactionEntity> readTransactionIdFromAllWallets(@PathVariable long id) throws MyTransactionException {
         return transactionsService.findTransactionIdFromAllWallets(id);
     }
 
 
     @PostMapping("/wallets/transactions")
-    public ResponseEntity<?> readTransactionIdFromWalletId(@Valid @RequestBody TransactionModel transactionModel) throws MyTransactionException {
+    public ResponseEntity<CustomErrorResponse> readTransactionIdFromWalletId(@Valid @RequestBody TransactionModel transactionModel) throws MyTransactionException {
         log.info("Create new transaction for Wallet with id = {}", transactionModel.getWalletId());
         return transactionsService.createTransaction(transactionModel);
     }

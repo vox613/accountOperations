@@ -1,3 +1,4 @@
+
 package com.iteco.a.alexandrov.accountOperations.Controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -5,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
 import com.iteco.a.alexandrov.accountOperations.Enum.AvailableTransactions;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
@@ -122,7 +124,7 @@ public class ControllerTest {
     // =========================================== Wallets GET by id ==========================================
     @Test
     public void testGetWalletById_whenGetWalletById_thenHttp200_andJsonResponseEntity() throws Exception {
-        ResponseEntity responseEntity = new ResponseEntity<>(wallet1, HttpStatus.OK);
+        ResponseEntity<WalletEntity> responseEntity = new ResponseEntity<>(wallet1, HttpStatus.OK);
 
         when(walletsService.readWallet(wallet1.getId())).thenReturn(responseEntity);
 
@@ -162,7 +164,7 @@ public class ControllerTest {
         updatedWallet.setWalletName(walletEntity.getWalletName());
         updatedWallet.setAccount(walletEntity.getAccount());
 
-        ResponseEntity responseEntity = new ResponseEntity<>(updatedWallet, HttpStatus.OK);
+        ResponseEntity<WalletEntity> responseEntity = new ResponseEntity<>(updatedWallet, HttpStatus.OK);
         when(walletsService.updateWallet(any(long.class), any(WalletEntity.class))).thenReturn(responseEntity);
 
         String contentAsString = mockMvc.perform(put("/rest/wallets/{id}", wallet1.getId())
@@ -213,7 +215,7 @@ public class ControllerTest {
         updatedWallet.setWalletName(walletEntity.getWalletName());
         updatedWallet.setAccount(walletEntity.getAccount());
 
-        ResponseEntity responseEntity = new ResponseEntity<>(updatedWallet, HttpStatus.CREATED);
+        ResponseEntity<WalletEntity> responseEntity = new ResponseEntity<>(updatedWallet, HttpStatus.CREATED);
 
         when(walletsService.createWallet(any(WalletEntity.class))).thenReturn(responseEntity);
 
@@ -234,7 +236,7 @@ public class ControllerTest {
     public void testPostWallet_whenPostIncorrectWallet_thenHttp400() throws Exception {
         final String requestStringToPOST = "{\"account\":\"2000\",\"walletName\":\"newWallet\"}";
         WalletEntity incorrectEntity = objectMapper.readValue(requestStringToPOST, WalletEntity.class);
-        ResponseEntity responseEntity = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        ResponseEntity<WalletEntity> responseEntity = new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
         when(walletsService.createWallet(any(WalletEntity.class))).thenReturn(responseEntity);
 
@@ -250,7 +252,7 @@ public class ControllerTest {
     // =========================================== Wallets DELETE =========================================
     @Test
     public void testDeleteAllWallet_whenDeleteAllWallet_thenHttp204() throws Exception {
-        ResponseEntity responseEntity = new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        ResponseEntity<CustomErrorResponse> responseEntity = new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
         when(walletsService.deleteAllWallets()).thenReturn(responseEntity);
 
@@ -264,10 +266,12 @@ public class ControllerTest {
     public void testDeleteWalletById_whenDeleteWalletById_thenHttp200() throws Exception {
 
         ResponseEntity responseEntityFirst = new ResponseEntity<>(wallet1, HttpStatus.OK);
-        ResponseEntity responseEntityOther = new ResponseEntity<>(String.format("Wallet with id: %d not found!",
-                wallet1.getId()), HttpStatus.NOT_FOUND);
+        ResponseEntity responseEntityOther = new ResponseEntity<>(
+                String.format("Wallet with id: %d not found!", wallet1.getId()),
+                HttpStatus.NOT_FOUND);
 
         when(walletsService.deleteWallet(wallet1.getId())).thenReturn(responseEntityFirst).thenReturn(responseEntityOther);
+
 
         //First request
         String response = mockMvc.perform(delete("/rest/wallets/{id}", idExist)
@@ -298,21 +302,23 @@ public class ControllerTest {
 
         when(transactionsService.findAllTransactionsFromAllWallets()).thenReturn(listResponseEntity);
 
-        String contentAsString = mockMvc.perform(get("/rest/wallets/transactions")
+        mockMvc.perform(get("/rest/wallets/transactions")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(allTransactions.size())))
-                .andReturn().getResponse().getContentAsString();
+                .andExpect(jsonPath("$[0].id").value(transaction1.getId()))
+                .andExpect(jsonPath("$[0].walletName").value(transaction1.getWalletName()))
+                .andExpect(jsonPath("$[0].transactionType").value(transaction1.getTransactionType()))
+                .andExpect(jsonPath("$[0].transactionAmount").value(transaction1.getTransactionAmount()))
+                .andExpect(jsonPath("$[0].walletAccountAfterTransaction").value(transaction1.getWalletAccountAfterTransaction()));
 
-        List transactionEntity = objectMapper.readValue(contentAsString, List.class);
-        assertEquals(transactionEntity, transactionEntity);
     }
 
 
     // =========================================== Transactions GET by id ==========================================
     @Test
     public void testGetTransactionById_whenGetTransactionsById_thenHttp200_andJsonResponseEntity() throws Exception {
-        ResponseEntity responseEntity = new ResponseEntity<>(transaction1, HttpStatus.OK);
+        ResponseEntity<TransactionEntity> responseEntity = new ResponseEntity<>(transaction1, HttpStatus.OK);
 
         when(transactionsService.findTransactionIdFromAllWallets(transaction1.getId())).thenReturn(responseEntity);
 
@@ -357,8 +363,10 @@ public class ControllerTest {
                 .andReturn().getResponse().getContentAsString();
 
         List transactionEntity = objectMapper.readValue(contentAsString, List.class);
-        assertEquals(transactionEntity, transactionEntity);
+        assertEquals(allTransactions, transactionEntity);
     }
+
+
 
     @Test
     public void testGetAllTransactionsByWalletId_whenGetAllTransactionsByNotExistWalletId_thenHttp404_andJsonResponseMessage() {
@@ -383,27 +391,25 @@ public class ControllerTest {
         final String requestStringToPOST = "{\"walletId\":\"1\",\"transactionType\":\"sum\",\"transactionAmount\":\"100\"}";
         TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
 
-        ResponseEntity responseEntity = new ResponseEntity<>(transaction1, HttpStatus.CREATED);
+        ResponseEntity<CustomErrorResponse> responseEntity = new ResponseEntity<>(new CustomErrorResponse("Success transaction!"), HttpStatus.CREATED);
 
         when(transactionsService.createTransaction(any(TransactionModel.class))).thenReturn(responseEntity);
 
-        MvcResult mvcResult = mockMvc.perform(post("/rest/wallets/transactions")
+        mockMvc.perform(post("/rest/wallets/transactions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .characterEncoding("UTF-8")
                 .content(objectMapper.writeValueAsString(transactionModel)))
                 .andExpect(status().isCreated())
-                .andReturn();
-
-        TransactionEntity transactionEntity = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), TransactionEntity.class);
-        assertEquals(transactionEntity, transaction1);
+                .andExpect(jsonPath("$.message").value("Success transaction!"));
     }
 
 
     @Test
     public void testPostTransactions_whenPostTransactionsWithNotExistWalletId_thenHttp404_andJsonResponseMessage() {
         final String requestStringToPOST = "{\"walletId\":\"10\",\"transactionType\":\"sum\",\"transactionAmount\":\"100\"}";
-        ResponseEntity responseEntity = new ResponseEntity<>("Wallet by ID not found!", HttpStatus.NOT_FOUND);
+        ResponseEntity<CustomErrorResponse> responseEntity = new ResponseEntity<>(
+                new CustomErrorResponse("Wallet by ID not found!"), HttpStatus.NOT_FOUND);
 
         try {
             TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
@@ -423,7 +429,8 @@ public class ControllerTest {
         final String requestStringToPOST = "{\"walletId\":\"1\",\"transactionType\":\"s1m\",\"transactionAmount\":\"100\"}";
         TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
 
-        ResponseEntity responseEntity = new ResponseEntity<>("Uncorrected operation!", HttpStatus.UNPROCESSABLE_ENTITY);
+        ResponseEntity<CustomErrorResponse> responseEntity = new ResponseEntity<>(
+                new CustomErrorResponse("Uncorrected operation!"), HttpStatus.UNPROCESSABLE_ENTITY);
 
         try {
             when(transactionsService.createTransaction(any(TransactionModel.class))).thenReturn(responseEntity);

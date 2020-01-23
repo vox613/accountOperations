@@ -17,24 +17,27 @@ import java.util.Optional;
 public interface WalletsRepository extends JpaRepository<WalletEntity, Long> {
 
     @Modifying
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("UPDATE WalletEntity acc SET acc.account = :account, acc.walletName = :walletName WHERE acc.id = :id")
     void updateWallet(@Param("id") long id, @Param("account") BigDecimal account, @Param("walletName") String walletName);
 
     boolean existsByWalletName(String walletName);
 
 
-    @Lock(LockModeType.OPTIMISTIC)
+//    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<WalletEntity> findById(long id);
 
     @NotNull
-    @Lock(LockModeType.OPTIMISTIC)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     WalletEntity save(@NotNull WalletEntity walletEntity);
 
-    @Lock(LockModeType.OPTIMISTIC)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     void deleteById(long id);
 
-    @Lock(LockModeType.OPTIMISTIC)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     void deleteAll();
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<WalletEntity> findByWalletName(String walletName);
 
 }

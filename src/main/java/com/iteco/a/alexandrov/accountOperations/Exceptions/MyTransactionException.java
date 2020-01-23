@@ -2,8 +2,12 @@ package com.iteco.a.alexandrov.accountOperations.Exceptions;
 
 import org.springframework.http.HttpStatus;
 
-public class MyTransactionException extends Exception {
+public class MyTransactionException extends RuntimeException {
     private HttpStatus httpStatus;
+
+    public MyTransactionException() {
+        super();
+    }
 
     public MyTransactionException(HttpStatus httpStatus) {
         this.httpStatus = httpStatus;

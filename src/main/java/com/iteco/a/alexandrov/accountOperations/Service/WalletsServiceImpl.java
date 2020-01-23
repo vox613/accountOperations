@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@EnableTransactionManagement
 public class WalletsServiceImpl implements WalletsService {
 
     private WalletsRepository walletsRepository;
@@ -32,7 +34,7 @@ public class WalletsServiceImpl implements WalletsService {
     }
 
     @Override
-    public ResponseEntity<?> readWallet(long id) throws MyWalletException {
+    public ResponseEntity<WalletEntity> readWallet(long id) throws MyWalletException {
         Optional<WalletEntity> walletEntityOptional = walletsRepository.findById(id);
         if (walletEntityOptional.isPresent()) {
             return new ResponseEntity<>(walletEntityOptional.get(), HttpStatus.OK);
@@ -44,7 +46,7 @@ public class WalletsServiceImpl implements WalletsService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyWalletException.class)
-    public ResponseEntity<?> createWallet(WalletEntity newWallet) throws MyWalletException {
+    public ResponseEntity<WalletEntity> createWallet(WalletEntity newWallet) throws MyWalletException {
         log.warn("Wallet = " + newWallet);
         if (checkWalletWithSameNameExist(newWallet.getWalletName())) {
             log.warn("Created wallet: = " + newWallet);
@@ -59,14 +61,14 @@ public class WalletsServiceImpl implements WalletsService {
     }
 
 
-    public ResponseEntity<?> responseCreater(String responseBody, HttpStatus status) {
+    public ResponseEntity<CustomErrorResponse> responseCreater(String responseBody, HttpStatus status) {
         return new ResponseEntity<>(new CustomErrorResponse(responseBody), status);
     }
 
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyWalletException.class)
-    public ResponseEntity<?> updateWallet(long id, WalletEntity newWallet) throws MyWalletException {
+    public ResponseEntity<WalletEntity> updateWallet(long id, WalletEntity newWallet) throws MyWalletException {
         log.info("Updating Wallet with id {}", id);
 
         Optional<WalletEntity> walletEntityOptional = walletsRepository.findById(id);
@@ -89,7 +91,7 @@ public class WalletsServiceImpl implements WalletsService {
     }
 
     @Override
-    public ResponseEntity<?> deleteWallet(long id) throws MyWalletException {
+    public ResponseEntity<WalletEntity> deleteWallet(long id) throws MyWalletException {
         log.info("Deleting User with id {}", id);
 
         Optional<WalletEntity> optionalWalletEntity = walletsRepository.findById(id);
@@ -105,7 +107,7 @@ public class WalletsServiceImpl implements WalletsService {
 
 
     @Override
-    public ResponseEntity<?> deleteAllWallets() {
+    public ResponseEntity<CustomErrorResponse> deleteAllWallets() {
         log.info("Deleting All Wallet");
         walletsRepository.deleteAll();
         return responseCreater("", HttpStatus.NO_CONTENT);

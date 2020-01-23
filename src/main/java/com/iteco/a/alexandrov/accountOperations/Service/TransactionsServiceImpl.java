@@ -3,6 +3,7 @@ package com.iteco.a.alexandrov.accountOperations.Service;
 import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
 import com.iteco.a.alexandrov.accountOperations.Enum.AvailableTransactions;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@EnableTransactionManagement
 public class TransactionsServiceImpl implements TransactionsService {
     private TransactionsRepository transactionsRepository;
     private WalletsRepository walletsRepository;
@@ -52,7 +55,7 @@ public class TransactionsServiceImpl implements TransactionsService {
 
 
     @Override
-    public ResponseEntity<?> findTransactionIdFromAllWallets(long id) throws MyTransactionException {
+    public ResponseEntity<TransactionEntity> findTransactionIdFromAllWallets(long id) throws MyTransactionException {
         Optional<TransactionEntity> operationEntityOptional = transactionsRepository.findById(id);
         if (operationEntityOptional.isPresent()) {
             return new ResponseEntity<>(operationEntityOptional.get(), HttpStatus.OK);
@@ -65,7 +68,7 @@ public class TransactionsServiceImpl implements TransactionsService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyTransactionException.class)
-    public ResponseEntity<?> createTransaction(TransactionModel transactionModel) throws MyTransactionException {
+    public ResponseEntity<CustomErrorResponse> createTransaction(TransactionModel transactionModel) throws MyTransactionException {
 
         WalletEntity walletEntity = checkWalletExist(transactionModel.getWalletId());
 
@@ -120,6 +123,7 @@ public class TransactionsServiceImpl implements TransactionsService {
                 transactionModel.getTransactionAmount(),
                 walletEntity.getAccount()
         ));
-
     }
+
+
 }

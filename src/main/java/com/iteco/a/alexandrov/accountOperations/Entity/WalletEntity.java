@@ -1,6 +1,5 @@
 package com.iteco.a.alexandrov.accountOperations.Entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.validator.constraints.Length;
 

@@ -1,9 +1,9 @@
 package com.iteco.a.alexandrov.accountOperations.Service;
 
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -13,16 +13,14 @@ public interface WalletsService {
 
     ResponseEntity<List<WalletEntity>> findAllWallets();
 
-    ResponseEntity<?> readWallet(long id) throws Throwable;
+    ResponseEntity<WalletEntity> readWallet(long id);
 
-    ResponseEntity<?> createWallet(WalletEntity newWallet) throws Throwable;
+    ResponseEntity<WalletEntity> createWallet(WalletEntity newWallet);
 
-    ResponseEntity<?> updateWallet(long id, WalletEntity newAccount) throws Throwable;
+    ResponseEntity<WalletEntity> updateWallet(long id, WalletEntity newAccount);
 
-    ResponseEntity<?> deleteWallet(long id) throws Throwable;
+    ResponseEntity<WalletEntity> deleteWallet(long id);
 
-    ResponseEntity<?> deleteAllWallets();
-
-    ResponseEntity<?> responseCreater(String responseBody, HttpStatus status);
+    ResponseEntity<CustomErrorResponse> deleteAllWallets();
 
 }

@@ -124,6 +124,19 @@ public class TransactionEntity {
         this.ver = ver;
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "id=" + id +
+                ", walletId=" + walletId +
+                ", walletName=" + walletName +
+                ", transactionType=" + transactionType +
+                ", transactionAmount=" + transactionAmount +
+                ", walletAccountAfterTransaction=" + walletAccountAfterTransaction +
+                ", transactionalDate=" + transactionalDate +
+                ", ver=" + ver +
+                '}';
+    }
 
     @Override
     public boolean equals(Object o) {
