@@ -28,9 +28,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -72,14 +70,12 @@ public class ControllerTest {
         wallet1.setId(1);
         wallet1.setWalletName("test");
         wallet1.setAccount(new BigDecimal(100));
-        wallet1.setVer(0L);
         wallet1.setCreateDateTime(LocalDateTime.now());
 
         transaction1 = new TransactionEntity();
         transaction1.setTransactionAmount(new BigDecimal(100));
         transaction1.setWalletId(1L);
         transaction1.setTransactionType(AvailableTransactions.SUM.getValue());
-        transaction1.setVer(0L);
         transaction1.setWalletName("acc1");
         transaction1.setWalletAccountAfterTransaction(new BigDecimal(1));
         transaction1.setTransactionalDate(LocalDateTime.now());
@@ -101,8 +97,7 @@ public class ControllerTest {
                 .andExpect(jsonPath("$", hasSize(allWallets.size())))
                 .andExpect(jsonPath("$[0].id").value(wallet1.getId()))
                 .andExpect(jsonPath("$[0].account").value(wallet1.getAccount()))
-                .andExpect(jsonPath("$[0].walletName").value(wallet1.getWalletName()))
-                .andExpect(jsonPath("$[0].ver").value(wallet1.getVer()));
+                .andExpect(jsonPath("$[0].walletName").value(wallet1.getWalletName()));
     }
 
 
@@ -363,7 +358,10 @@ public class ControllerTest {
                 .andReturn().getResponse().getContentAsString();
 
         List transactionEntity = objectMapper.readValue(contentAsString, List.class);
-        assertEquals(allTransactions, transactionEntity);
+
+        for (int i = 0; i < allTransactions.size(); i++) {
+            assertEquals(allTransactions.get(i).toString(), transactionEntity.get(i).toString());
+        }
     }
 
 
@@ -414,7 +412,7 @@ public class ControllerTest {
         try {
             TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
             when(transactionsService.createTransaction(any(TransactionModel.class))).thenReturn(responseEntity);
-            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions", idNotExist)
+            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(transactionModel)))
                     .andExpect(status().isNotFound());
@@ -434,7 +432,7 @@ public class ControllerTest {
 
         try {
             when(transactionsService.createTransaction(any(TransactionModel.class))).thenReturn(responseEntity);
-            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions", idExist)
+            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(transactionModel)))
                     .andExpect(status().isUnprocessableEntity());

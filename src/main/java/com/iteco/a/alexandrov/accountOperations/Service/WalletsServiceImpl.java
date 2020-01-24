@@ -66,6 +66,7 @@ public class WalletsServiceImpl implements WalletsService {
     }
 
 
+    // TODO: 24.01.2020 Нужна ли транзакция, накинуть лок для базы
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyWalletException.class)
     public ResponseEntity<WalletEntity> updateWallet(long id, WalletEntity newWallet) throws MyWalletException {
@@ -90,6 +91,7 @@ public class WalletsServiceImpl implements WalletsService {
         }
     }
 
+    // TODO: 24.01.2020 добавить транзакцию на эти операции
     @Override
     public ResponseEntity<WalletEntity> deleteWallet(long id) throws MyWalletException {
         log.info("Deleting User with id {}", id);

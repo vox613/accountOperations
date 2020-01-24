@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -65,12 +67,18 @@ public class TransactionsServiceImpl implements TransactionsService {
         }
     }
 
+    @Autowired
+    EntityManager entityManager;
+
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyTransactionException.class)
     public ResponseEntity<CustomErrorResponse> createTransaction(TransactionModel transactionModel) throws MyTransactionException {
 
+//        WalletEntity walletEntity = entityManager.find(WalletEntity.class, transactionModel.getWalletId(), LockModeType.PESSIMISTIC_WRITE);
         WalletEntity walletEntity = checkWalletExist(transactionModel.getWalletId());
+//        entityManager.lock(walletEntity, LockModeType.PESSIMISTIC_WRITE);
+
 
         String operation = transactionModel.getTransactionType().toLowerCase();
         checkCorrectTransactionOperation(operation);
@@ -82,13 +90,17 @@ public class TransactionsServiceImpl implements TransactionsService {
         }
 
         createJournalLog(walletEntity, transactionModel);
+
+        entityManager.lock(walletEntity, LockModeType.NONE);
         return walletsService.responseCreater("Success transaction!", HttpStatus.CREATED);
     }
 
 
     private WalletEntity checkWalletExist(Long walletId) throws MyTransactionException {
-        return walletsRepository.findById(walletId).orElseThrow(() ->
-                new MyTransactionException("Wallet by ID not found!", HttpStatus.NOT_FOUND));
+        return Optional.ofNullable(entityManager.find(WalletEntity.class, walletId, LockModeType.PESSIMISTIC_WRITE))
+                .orElseThrow(() ->
+                        new MyTransactionException("Wallet by ID not found!", HttpStatus.NOT_FOUND)
+                );
     }
 
     private void checkCorrectTransactionOperation(String transactionType) throws MyTransactionException {

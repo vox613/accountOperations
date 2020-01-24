@@ -39,9 +39,6 @@ public class WalletEntity {
 //    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
     private LocalDateTime createDateTime;
 
-    @Version
-    Long ver;
-
     public WalletEntity() {
     }
 
@@ -78,21 +75,13 @@ public class WalletEntity {
         this.createDateTime = createDateTime;
     }
 
-    public Long getVer() {
-        return ver;
-    }
-
-    public void setVer(Long ver) {
-        this.ver = ver;
-    }
-
     @Override
     public String toString() {
         return "{" +
-                "id:" + id +
-                ",account:" + account +
-                ",walletName:'" + walletName + '\'' +
-                ",createDateTime:" + createDateTime +
+                "id=" + id +
+                ", account=" + account +
+                ", walletName=" + walletName +
+                ", createDateTime=" + createDateTime +
                 '}';
     }
 
@@ -104,12 +93,11 @@ public class WalletEntity {
         return id.equals(that.id) &&
                 account.equals(that.account) &&
                 walletName.equals(that.walletName) &&
-                createDateTime.equals(that.createDateTime) &&
-                ver.equals(that.ver);
+                createDateTime.equals(that.createDateTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, account, walletName, createDateTime, ver);
+        return Objects.hash(id, account, walletName, createDateTime);
     }
 }

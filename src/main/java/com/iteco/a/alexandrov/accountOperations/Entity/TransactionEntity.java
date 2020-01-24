@@ -48,9 +48,6 @@ public class TransactionEntity {
 //    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
     private LocalDateTime transactionalDate;
 
-    @Version
-    Long ver;
-
 
     public TransactionEntity() {
     }
@@ -116,14 +113,6 @@ public class TransactionEntity {
         this.transactionalDate = transactionalDate;
     }
 
-    public Long getVer() {
-        return ver;
-    }
-
-    public void setVer(Long ver) {
-        this.ver = ver;
-    }
-
     @Override
     public String toString() {
         return "{" +
@@ -134,7 +123,6 @@ public class TransactionEntity {
                 ", transactionAmount=" + transactionAmount +
                 ", walletAccountAfterTransaction=" + walletAccountAfterTransaction +
                 ", transactionalDate=" + transactionalDate +
-                ", ver=" + ver +
                 '}';
     }
 
@@ -149,12 +137,11 @@ public class TransactionEntity {
                 transactionType.equals(that.transactionType) &&
                 transactionAmount.equals(that.transactionAmount) &&
                 Objects.equals(walletAccountAfterTransaction, that.walletAccountAfterTransaction) &&
-                transactionalDate.equals(that.transactionalDate) &&
-                Objects.equals(ver, that.ver);
+                transactionalDate.equals(that.transactionalDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, walletId, walletName, transactionType, transactionAmount, walletAccountAfterTransaction, transactionalDate, ver);
+        return Objects.hash(id, walletId, walletName, transactionType, transactionAmount, walletAccountAfterTransaction, transactionalDate);
     }
 }

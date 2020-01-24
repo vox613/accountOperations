@@ -24,7 +24,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.*;
 
 import static org.hamcrest.Matchers.*;
@@ -306,6 +305,7 @@ public class ControllerIntegrationTest {
 
     // =========================================== Transactions POST ==========================================
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void testPostTransactions_whenPostTransactions_thenHttp201_andJsonResponseMessage() throws Exception {
         final String requestStringToPOST = "{\"walletId\":\"1\",\"transactionType\":\"sum\",\"transactionAmount\":\"100\"}";
         TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
@@ -326,12 +326,13 @@ public class ControllerIntegrationTest {
 
         try {
             TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
-            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions", idNotExist)
+            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(transactionModel)))
                     .andExpect(status().isNotFound());
         } catch (Exception e) {
-            assertThat(e.getMessage(), is(String.format("Operation with id: %d not found!", idNotExist)));
+            System.out.println();
+            assertEquals(e.getMessage(), String.format("Operation with id: %d not found!", idNotExist));
         }
     }
 
@@ -341,7 +342,7 @@ public class ControllerIntegrationTest {
         TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
 
         try {
-            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions", idExist)
+            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(transactionModel)))
                     .andExpect(status().isUnprocessableEntity());
@@ -350,32 +351,63 @@ public class ControllerIntegrationTest {
         }
     }
 
+
+    // TODO: 24.01.2020 оформить тест транзакционности, rollback, одновременные операции
+
+    // TODO: 24.01.2020 Написать тесты сервисов и репозиториев написать JavaDoc
+
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void execute() throws InterruptedException {
 
-        ExecutorService executor = Executors.newFixedThreadPool(10);
+        ExecutorService executor = Executors.newFixedThreadPool(25);
 
         Callable<String> callableTaskSub = () -> {
-            TimeUnit.MILLISECONDS.sleep(new Random().nextInt(300));
-            return testPostSub();
+//            TimeUnit.MILLISECONDS.sleep(new Random().nextInt(1000));
+            System.out.println("1> " + walletsRepository.findById(idExist).orElseThrow(MyWalletException::new).getAccount().toString());
+            String s = testPostSub();
+            System.out.println("2> " + walletsRepository.findById(idExist).orElseThrow(MyWalletException::new).getAccount().toString());
+            return s;
         };
         Callable<String> callableTaskSum = () -> {
-            TimeUnit.MILLISECONDS.sleep(new Random().nextInt(500));
-            return testPostSum();
+//            TimeUnit.MILLISECONDS.sleep(new Random().nextInt(500));
+            System.out.println("1> " + walletsRepository.findById(idExist).orElseThrow(MyWalletException::new).getAccount().toString());
+            String s = testPostSum();
+            System.out.println("2> " + walletsRepository.findById(idExist).orElseThrow(MyWalletException::new).getAccount().toString());
+            return s;
         };
-
 
 
         List<Callable<String>> callableTasks = new ArrayList<>();
-        callableTasks.add(callableTaskSub);
         callableTasks.add(callableTaskSum);
-        callableTasks.add(callableTaskSub);
-        callableTasks.add(callableTaskSub);
         callableTasks.add(callableTaskSum);
-        callableTasks.add(callableTaskSub);
-        callableTasks.add(callableTaskSub);
         callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
+
         callableTasks.add(callableTaskSub);
+        callableTasks.add(callableTaskSub);
+        callableTasks.add(callableTaskSub);
+        callableTasks.add(callableTaskSub);
+        callableTasks.add(callableTaskSub);
+
+        callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
+
+        callableTasks.add(callableTaskSub);
+        callableTasks.add(callableTaskSub);
+        callableTasks.add(callableTaskSub);
+        callableTasks.add(callableTaskSub);
+        callableTasks.add(callableTaskSub);
+
+        callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
+        callableTasks.add(callableTaskSum);
 
 
         List<Future<String>> futures = null;
@@ -385,7 +417,7 @@ public class ControllerIntegrationTest {
             System.out.println("1 >>>>>>>>>>>");
             e.printStackTrace();
         }
-        Thread.sleep(500);
+        Thread.sleep(2000);
         for (int i = 0; i < futures.size(); i++) {
             try {
                 System.out.println(i + " = " + futures.get(i).get());
@@ -394,14 +426,23 @@ public class ControllerIntegrationTest {
                 e.printStackTrace();
             }
         }
+
+        System.out.println("<><><><> " + walletsRepository.findById(idExist).orElseThrow(MyWalletException::new).getAccount().toString());
+
     }
 
 
+//
+//    @Before
+//    public void init(){
+//
+//    }
 
 
     private String testPostSum() throws Exception {
         final String requestStringToPOST = "{\"walletId\":\"1\",\"transactionType\":\"sum\",\"transactionAmount\":\"100\"}";
         TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
+
 
         String contentAsString = mockMvc.perform(post("/rest/wallets/transactions")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -410,8 +451,8 @@ public class ControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(transactionModel)))
                 .andReturn().getResponse().getContentAsString();
 
-        System.out.println(contentAsString);
-        return contentAsString;
+
+        return walletsRepository.findById(idExist).orElseThrow(MyWalletException::new).getAccount().toString();
     }
 
     private String testPostSub() throws Exception {
