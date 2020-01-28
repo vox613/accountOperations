@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Optional;
 
@@ -20,15 +19,12 @@ public interface WalletsRepository extends JpaRepository<WalletEntity, Long> {
 
     boolean existsByWalletName(String walletName);
 
-    Optional<WalletEntity> findById(long id);
-
-    @NotNull
-    WalletEntity save(@NotNull WalletEntity walletEntity);
-
     void deleteById(long id);
 
     void deleteAll();
 
     Optional<WalletEntity> findByWalletName(String walletName);
+
+    Optional<WalletEntity> findById(long id);
 
 }

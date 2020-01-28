@@ -2,7 +2,7 @@ package com.iteco.a.alexandrov.accountOperations.Exceptions;
 
 import org.springframework.http.HttpStatus;
 
-public class MyWalletException extends RuntimeException {
+public class MyWalletException extends Exception {
     private HttpStatus httpStatus;
 
     public MyWalletException() {

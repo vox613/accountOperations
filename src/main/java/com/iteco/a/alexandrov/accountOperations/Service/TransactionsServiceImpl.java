@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.annotation.RequestScope;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -31,13 +32,16 @@ public class TransactionsServiceImpl implements TransactionsService {
     private TransactionsRepository transactionsRepository;
     private WalletsRepository walletsRepository;
     private WalletsServiceImpl walletsService;
+    private EntityManager entityManager;
 
 
     @Autowired
-    public TransactionsServiceImpl(TransactionsRepository transactionsRepository, WalletsRepository walletsRepository, WalletsServiceImpl walletsService) {
+    public TransactionsServiceImpl(TransactionsRepository transactionsRepository, WalletsRepository walletsRepository,
+                                   WalletsServiceImpl walletsService, EntityManager entityManager) {
         this.transactionsRepository = transactionsRepository;
         this.walletsRepository = walletsRepository;
         this.walletsService = walletsService;
+        this.entityManager = entityManager;
     }
 
 
@@ -67,18 +71,12 @@ public class TransactionsServiceImpl implements TransactionsService {
         }
     }
 
-    @Autowired
-    EntityManager entityManager;
-
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyTransactionException.class)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.SERIALIZABLE, rollbackFor = MyTransactionException.class)
     public ResponseEntity<CustomErrorResponse> createTransaction(TransactionModel transactionModel) throws MyTransactionException {
 
-//        WalletEntity walletEntity = entityManager.find(WalletEntity.class, transactionModel.getWalletId(), LockModeType.PESSIMISTIC_WRITE);
         WalletEntity walletEntity = checkWalletExist(transactionModel.getWalletId());
-//        entityManager.lock(walletEntity, LockModeType.PESSIMISTIC_WRITE);
-
 
         String operation = transactionModel.getTransactionType().toLowerCase();
         checkCorrectTransactionOperation(operation);

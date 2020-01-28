@@ -18,6 +18,8 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errorDetails, status);
     }
 
+
+
     @ExceptionHandler(value = {MyTransactionException.class})
     public ResponseEntity<CustomErrorResponse> handleTransactionalException(MyTransactionException ex) {
         logger.error(ex.toString());
@@ -25,4 +27,8 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
         CustomErrorResponse errorDetails = new CustomErrorResponse(ex.getMessage());
         return new ResponseEntity<>(errorDetails, status);
     }
+
+
 }
+
+

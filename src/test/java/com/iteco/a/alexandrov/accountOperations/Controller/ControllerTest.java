@@ -1,14 +1,12 @@
 
 package com.iteco.a.alexandrov.accountOperations.Controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
 import com.iteco.a.alexandrov.accountOperations.Enum.AvailableTransactions;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
-import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
-import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
 import com.iteco.a.alexandrov.accountOperations.Service.TransactionsServiceImpl;
 import com.iteco.a.alexandrov.accountOperations.Service.WalletsServiceImpl;
@@ -28,12 +26,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -91,13 +89,18 @@ public class ControllerTest {
 
         when(walletsService.findAllWallets()).thenReturn(responseEntity);
 
-        mockMvc.perform(get("/rest/wallets")
+        String contentAsString = mockMvc.perform(get("/rest/wallets")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(allWallets.size())))
-                .andExpect(jsonPath("$[0].id").value(wallet1.getId()))
-                .andExpect(jsonPath("$[0].account").value(wallet1.getAccount()))
-                .andExpect(jsonPath("$[0].walletName").value(wallet1.getWalletName()));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        List<WalletEntity> walletEntities = objectMapper.readValue(contentAsString,
+                new TypeReference<List<WalletEntity>>() {
+                });
+
+        assertEquals(allWallets, walletEntities);
     }
 
 
@@ -108,13 +111,21 @@ public class ControllerTest {
 
         when(walletsService.findAllWallets()).thenReturn(responseEntity);
 
-        MvcResult mvcResult = mockMvc.perform(get("/rest/wallets")
+        String contentAsString = mockMvc.perform(get("/rest/wallets")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(allWallets.size())))
-                .andReturn();
-        assertEquals(mvcResult.getResponse().getContentAsString(), "[]");
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        List<WalletEntity> walletEntities = objectMapper.readValue(contentAsString,
+                new TypeReference<List<WalletEntity>>() {
+                });
+
+        assertEquals(walletEntities, allWallets);
     }
+
 
     // =========================================== Wallets GET by id ==========================================
     @Test
@@ -126,26 +137,27 @@ public class ControllerTest {
         String contentAsString = mockMvc.perform(get("/rest/wallets/{id}", wallet1.getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         WalletEntity walletEntity = objectMapper.readValue(contentAsString, WalletEntity.class);
         assertEquals(walletEntity, wallet1);
     }
 
     @Test
-    public void testGetWalletById_whenGetWalletById_isNotExist_thenHttp404_andJsonResponseMessage() {
+    public void testGetWalletById_whenGetWalletById_isNotExist_thenHttp404_andJsonResponseMessage() throws Exception {
         long walletNotExistId = 5;
-        ResponseEntity responseEntity = new ResponseEntity<>(String.format("Wallet with id: %d not found!", walletNotExistId), HttpStatus.NOT_FOUND);
+        ResponseEntity responseEntity = new ResponseEntity<>(new CustomErrorResponse(
+                String.format("Wallet with id: %d not found!", walletNotExistId)), HttpStatus.NOT_FOUND);
 
-        try {
-            when(walletsService.readWallet(walletNotExistId)).thenReturn(responseEntity);
-            mockMvc.perform(MockMvcRequestBuilders.get("/rest/wallets/{id}", walletNotExistId)
-                    .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isNotFound());
-            throw new MyWalletException(String.format("Wallet with id: %d not found!", walletNotExistId), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            assertThat(e.getMessage(), is(String.format("Wallet with id: %d not found!", walletNotExistId)));
-        }
+        when(walletsService.readWallet(walletNotExistId)).thenReturn(responseEntity);
+
+        mockMvc.perform(get("/rest/wallets/{id}", walletNotExistId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Wallet with id: %d not found!", walletNotExistId)));
 
     }
 
@@ -168,7 +180,9 @@ public class ControllerTest {
                 .characterEncoding("UTF-8")
                 .content(objectMapper.writeValueAsString(walletEntity)))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         WalletEntity walletEntity1 = objectMapper.readValue(contentAsString, WalletEntity.class);
         assertEquals(walletEntity1, updatedWallet);
@@ -176,27 +190,25 @@ public class ControllerTest {
     }
 
     @Test
-    public void testPutWalletById_whenPutWalletById_isNotExist_thenHttp404_andJsonResponseMessage() {
+    public void testPutWalletById_whenPutWalletById_isNotExist_thenHttp404_andJsonResponseMessage() throws Exception {
         final String requestStringToPUT = "{\"account\":\"2000\",\"walletName\":\"newNameForTest\"}";
 
-        try {
-            WalletEntity walletEntity = objectMapper.readValue(requestStringToPUT, WalletEntity.class);
-            ResponseEntity responseEntity = new ResponseEntity<>(String.format("Wallet with id: %d not found!", idNotExist), HttpStatus.NOT_FOUND);
+        WalletEntity walletEntity = objectMapper.readValue(requestStringToPUT, WalletEntity.class);
+        ResponseEntity responseEntity = new ResponseEntity<>(
+                new CustomErrorResponse(String.format("Wallet with id: %d not found!", idNotExist)),
+                HttpStatus.NOT_FOUND);
 
-            when(walletsService.updateWallet(any(long.class), any(WalletEntity.class))).thenReturn(responseEntity);
+        when(walletsService.updateWallet(any(long.class), any(WalletEntity.class))).thenReturn(responseEntity);
 
-            mockMvc.perform(put("/rest/wallets/{id}", idNotExist)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .characterEncoding("UTF-8")
-                    .content(objectMapper.writeValueAsString(walletEntity)))
-                    .andExpect(status().isNotFound());
-            throw new MyWalletException(String.format("Wallet with id: %d not found!", idNotExist), HttpStatus.NOT_FOUND);
-        } catch (MyWalletException ex) {
-            assertThat(ex.getMessage(), is(String.format("Wallet with id: %d not found!", idNotExist)));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mockMvc.perform(put("/rest/wallets/{id}", idNotExist)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
+                .content(objectMapper.writeValueAsString(walletEntity)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Wallet with id: %d not found!", idNotExist)));
+        ;
     }
 
 
@@ -222,7 +234,8 @@ public class ControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        WalletEntity walletEntity1 = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), WalletEntity.class);
+        WalletEntity walletEntity1 = objectMapper.readValue(mvcResult.getResponse().getContentAsString(),
+                WalletEntity.class);
         assertEquals(walletEntity1, wallet1);
     }
 
@@ -260,9 +273,9 @@ public class ControllerTest {
     @Test
     public void testDeleteWalletById_whenDeleteWalletById_thenHttp200() throws Exception {
 
-        ResponseEntity responseEntityFirst = new ResponseEntity<>(wallet1, HttpStatus.OK);
+        ResponseEntity<WalletEntity> responseEntityFirst = new ResponseEntity<>(wallet1, HttpStatus.OK);
         ResponseEntity responseEntityOther = new ResponseEntity<>(
-                String.format("Wallet with id: %d not found!", wallet1.getId()),
+                new CustomErrorResponse(String.format("Wallet with id: %d not found!", wallet1.getId())),
                 HttpStatus.NOT_FOUND);
 
         when(walletsService.deleteWallet(wallet1.getId())).thenReturn(responseEntityFirst).thenReturn(responseEntityOther);
@@ -277,15 +290,11 @@ public class ControllerTest {
         assertEquals(wallet1, objectMapper.readValue(response, WalletEntity.class));
 
         //Other request
-        try {
-            mockMvc.perform(delete("/rest/wallets/{id}", idExist)
-                    .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isNotFound())
-                    .andReturn().getResponse().getContentAsString();
-            throw new MyWalletException(String.format("Wallet with id: %d not found!", idExist), HttpStatus.NOT_FOUND);
-        } catch (MyWalletException ex) {
-            assertThat(ex.getMessage(), is(String.format("Wallet with id: %d not found!", idExist)));
-        }
+        mockMvc.perform(delete("/rest/wallets/{id}", idExist)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Wallet with id: %d not found!", wallet1.getId())));
     }
 
 
@@ -297,16 +306,17 @@ public class ControllerTest {
 
         when(transactionsService.findAllTransactionsFromAllWallets()).thenReturn(listResponseEntity);
 
-        mockMvc.perform(get("/rest/wallets/transactions")
+        String contentAsString = mockMvc.perform(get("/rest/wallets/transactions")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(allTransactions.size())))
-                .andExpect(jsonPath("$[0].id").value(transaction1.getId()))
-                .andExpect(jsonPath("$[0].walletName").value(transaction1.getWalletName()))
-                .andExpect(jsonPath("$[0].transactionType").value(transaction1.getTransactionType()))
-                .andExpect(jsonPath("$[0].transactionAmount").value(transaction1.getTransactionAmount()))
-                .andExpect(jsonPath("$[0].walletAccountAfterTransaction").value(transaction1.getWalletAccountAfterTransaction()));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
+        List<TransactionEntity> transactionListActual = objectMapper.readValue(contentAsString, new TypeReference<List<TransactionEntity>>() {
+        });
+
+        assertEquals(allTransactions, transactionListActual);
     }
 
 
@@ -320,26 +330,24 @@ public class ControllerTest {
         String contentAsString = mockMvc.perform(get("/rest/wallets/transactions/{id}", transaction1.getId())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         TransactionEntity transactionEntity = objectMapper.readValue(contentAsString, TransactionEntity.class);
         assertEquals(transaction1, transactionEntity);
     }
 
     @Test
-    public void testGetTransactionById_whenTransactionsById_isNotExist_thenHttp404_andJsonResponseMessage() {
+    public void testGetTransactionById_whenTransactionsById_isNotExist_thenHttp404_andJsonResponseMessage() throws Exception {
 
-        ResponseEntity responseEntity = new ResponseEntity<>("Wallet by ID not found!", HttpStatus.NOT_FOUND);
+        ResponseEntity responseEntity = new ResponseEntity<>(new CustomErrorResponse("Wallet by ID not found!"), HttpStatus.NOT_FOUND);
 
-        try {
-            when(transactionsService.findTransactionIdFromAllWallets(idNotExist)).thenReturn(responseEntity);
-            mockMvc.perform(MockMvcRequestBuilders.get("/rest/wallets/transactions/{id}", idNotExist)
-                    .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isNotFound());
-            throw new MyTransactionException(String.format("Operation with id: %d not found!", idNotExist), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            assertThat(e.getMessage(), is(String.format("Operation with id: %d not found!", idNotExist)));
-        }
+        when(transactionsService.findTransactionIdFromAllWallets(idNotExist)).thenReturn(responseEntity);
+        mockMvc.perform(MockMvcRequestBuilders.get("/rest/wallets/transactions/{id}", idNotExist)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Wallet by ID not found!"));
     }
 
 
@@ -355,31 +363,29 @@ public class ControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(allTransactions.size())))
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        List transactionEntity = objectMapper.readValue(contentAsString, List.class);
-
-        for (int i = 0; i < allTransactions.size(); i++) {
-            assertEquals(allTransactions.get(i).toString(), transactionEntity.get(i).toString());
-        }
+        List<TransactionEntity> transactionEntity = objectMapper.readValue(contentAsString, new TypeReference<List<TransactionEntity>>() {
+        });
+        assertEquals(allTransactions, transactionEntity);
     }
 
 
-
     @Test
-    public void testGetAllTransactionsByWalletId_whenGetAllTransactionsByNotExistWalletId_thenHttp404_andJsonResponseMessage() {
+    public void testGetAllTransactionsByWalletId_whenGetAllTransactionsByNotExistWalletId_thenHttp404_andJsonResponseMessage() throws Exception {
 
-        ResponseEntity responseEntity = new ResponseEntity<>(String.format("Wallet with id: %d not found!", idNotExist), HttpStatus.NOT_FOUND);
+        ResponseEntity responseEntity = new ResponseEntity<>(
+                new CustomErrorResponse(String.format("Wallet with id: %d not found!", idNotExist)),
+                HttpStatus.NOT_FOUND);
 
-        try {
-            when(transactionsService.findAllTransactionsFromWalletId(idNotExist)).thenReturn(responseEntity);
-            mockMvc.perform(MockMvcRequestBuilders.get("/rest/wallets/{id}/transactions", idNotExist)
-                    .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isNotFound());
-            throw new MyTransactionException(String.format("Wallet with id: %d not found!", idNotExist), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            assertThat(e.getMessage(), is(String.format("Wallet with id: %d not found!", idNotExist)));
-        }
+        when(transactionsService.findAllTransactionsFromWalletId(idNotExist)).thenReturn(responseEntity);
+        mockMvc.perform(MockMvcRequestBuilders.get("/rest/wallets/{id}/transactions", idNotExist)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Wallet with id: %d not found!", idNotExist)));
     }
 
 
@@ -404,42 +410,35 @@ public class ControllerTest {
 
 
     @Test
-    public void testPostTransactions_whenPostTransactionsWithNotExistWalletId_thenHttp404_andJsonResponseMessage() {
+    public void testPostTransactions_whenPostTransactionsWithNotExistWalletId_thenHttp404_andJsonResponseMessage() throws Exception {
         final String requestStringToPOST = "{\"walletId\":\"10\",\"transactionType\":\"sum\",\"transactionAmount\":\"100\"}";
         ResponseEntity<CustomErrorResponse> responseEntity = new ResponseEntity<>(
                 new CustomErrorResponse("Wallet by ID not found!"), HttpStatus.NOT_FOUND);
 
-        try {
-            TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
-            when(transactionsService.createTransaction(any(TransactionModel.class))).thenReturn(responseEntity);
-            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(transactionModel)))
-                    .andExpect(status().isNotFound());
-            throw new MyTransactionException(String.format("Operation with id: %d not found!", idNotExist), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            assertThat(e.getMessage(), is(String.format("Operation with id: %d not found!", idNotExist)));
-        }
+        TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
+        when(transactionsService.createTransaction(any(TransactionModel.class))).thenReturn(responseEntity);
+        mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(transactionModel)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Wallet by ID not found!"));
     }
 
     @Test
-    public void testPostTransactions_whenPostTransactionsWithIncorrectData_thenHttp404_andJsonResponseMessage() throws JsonProcessingException {
+    public void testPostTransactions_whenPostTransactionsWithIncorrectData_thenHttp404_andJsonResponseMessage() throws Exception {
         final String requestStringToPOST = "{\"walletId\":\"1\",\"transactionType\":\"s1m\",\"transactionAmount\":\"100\"}";
         TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
 
         ResponseEntity<CustomErrorResponse> responseEntity = new ResponseEntity<>(
                 new CustomErrorResponse("Uncorrected operation!"), HttpStatus.UNPROCESSABLE_ENTITY);
 
-        try {
-            when(transactionsService.createTransaction(any(TransactionModel.class))).thenReturn(responseEntity);
-            mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(transactionModel)))
-                    .andExpect(status().isUnprocessableEntity());
-            throw new MyTransactionException("Uncorrected operation!", HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            assertThat(e.getMessage(), is("Uncorrected operation!"));
-        }
+        when(transactionsService.createTransaction(any(TransactionModel.class))).thenReturn(responseEntity);
+        mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(transactionModel)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.message").value("Uncorrected operation!"));
+        ;
     }
 
 }

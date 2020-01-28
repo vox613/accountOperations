@@ -1,5 +1,6 @@
 package com.iteco.a.alexandrov.accountOperations.Entity;
 
+import com.sun.xml.bind.v2.TODO;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.validator.constraints.Length;
 
@@ -84,6 +85,8 @@ public class WalletEntity {
                 ", createDateTime=" + createDateTime +
                 '}';
     }
+
+    // TODO: 26.01.2020 equals и hashcode должны заввисеть от одних и тех же полей для обеспеччения равномерного распределения, исправить в энтити
 
     @Override
     public boolean equals(Object o) {
