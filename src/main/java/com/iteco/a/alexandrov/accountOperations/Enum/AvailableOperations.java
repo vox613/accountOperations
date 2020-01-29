@@ -1,12 +1,12 @@
 package com.iteco.a.alexandrov.accountOperations.Enum;
 
-public enum AvailableTransactions {
+public enum AvailableOperations {
     SUM("sum"),
     SUB("sub");
 
     private String value;
 
-    AvailableTransactions(String value) {
+    AvailableOperations(String value) {
         this.value = value;
     }
 

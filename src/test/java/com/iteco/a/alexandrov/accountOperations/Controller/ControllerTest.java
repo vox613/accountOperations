@@ -5,8 +5,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
-import com.iteco.a.alexandrov.accountOperations.Enum.AvailableTransactions;
-import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
+import com.iteco.a.alexandrov.accountOperations.Enum.AvailableOperations;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.CustomResponse.CustomErrorResponse;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
 import com.iteco.a.alexandrov.accountOperations.Service.TransactionsServiceImpl;
 import com.iteco.a.alexandrov.accountOperations.Service.WalletsServiceImpl;
@@ -73,7 +73,7 @@ public class ControllerTest {
         transaction1 = new TransactionEntity();
         transaction1.setTransactionAmount(new BigDecimal(100));
         transaction1.setWalletId(1L);
-        transaction1.setTransactionType(AvailableTransactions.SUM.getValue());
+        transaction1.setTransactionType(AvailableOperations.SUM.getValue());
         transaction1.setWalletName("acc1");
         transaction1.setWalletAccountAfterTransaction(new BigDecimal(1));
         transaction1.setTransactionalDate(LocalDateTime.now());
@@ -436,9 +436,7 @@ public class ControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/rest/wallets/transactions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(transactionModel)))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.message").value("Uncorrected operation!"));
-        ;
+                .andExpect(status().isBadRequest());
     }
 
 }

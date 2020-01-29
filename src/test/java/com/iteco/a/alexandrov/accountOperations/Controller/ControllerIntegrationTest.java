@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
-import com.iteco.a.alexandrov.accountOperations.Enum.AvailableTransactions;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
@@ -18,13 +17,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.event.annotation.BeforeTestMethod;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
@@ -334,17 +330,14 @@ public class ControllerIntegrationTest {
     }
 
     @Test
-    public void testPostTransactions_whenPostTransactionsWithIncorrectData_thenHttp404_andJsonResponseMessage() throws Exception {
+    public void testPostTransactions_whenPostTransactionsWithIncorrectData_thenHttp400() throws Exception {
         final String requestStringToPOST = "{\"walletId\":\"1\",\"transactionType\":\"s1m\",\"transactionAmount\":\"100\"}";
         TransactionModel transactionModel = objectMapper.readValue(requestStringToPOST, TransactionModel.class);
 
-        Exception resolvedException = mockMvc.perform(post("/rest/wallets/transactions")
+        mockMvc.perform(post("/rest/wallets/transactions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(transactionModel)))
-                .andExpect(status().isUnprocessableEntity())
-                .andReturn().getResolvedException();
-
-        assertTrue(resolvedException instanceof MyTransactionException);
+                .andExpect(status().isBadRequest());
     }
 
 }

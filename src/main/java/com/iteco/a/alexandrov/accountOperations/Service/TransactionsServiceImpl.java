@@ -2,8 +2,8 @@ package com.iteco.a.alexandrov.accountOperations.Service;
 
 import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
-import com.iteco.a.alexandrov.accountOperations.Enum.AvailableTransactions;
-import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
+import com.iteco.a.alexandrov.accountOperations.Enum.AvailableOperations;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.CustomResponse.CustomErrorResponse;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.annotation.RequestScope;
 
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -73,17 +72,17 @@ public class TransactionsServiceImpl implements TransactionsService {
 
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.SERIALIZABLE, rollbackFor = MyTransactionException.class)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.SERIALIZABLE, rollbackFor = Exception.class)
     public ResponseEntity<CustomErrorResponse> createTransaction(TransactionModel transactionModel) throws MyTransactionException {
 
         WalletEntity walletEntity = checkWalletExist(transactionModel.getWalletId());
 
         String operation = transactionModel.getTransactionType().toLowerCase();
-        checkCorrectTransactionOperation(operation);
+//        checkCorrectTransactionOperation(operation);
 
-        if (operation.equals(AvailableTransactions.SUB.getValue())) {
+        if (operation.equals(AvailableOperations.SUB.getValue())) {
             subTransactionExecution(walletEntity, transactionModel);
-        } else if (operation.equals(AvailableTransactions.SUM.getValue())) {
+        } else if (operation.equals(AvailableOperations.SUM.getValue())) {
             sumTransactionExecution(walletEntity, transactionModel);
         }
 
@@ -101,11 +100,11 @@ public class TransactionsServiceImpl implements TransactionsService {
                 );
     }
 
-    private void checkCorrectTransactionOperation(String transactionType) throws MyTransactionException {
-        if (Arrays.stream(AvailableTransactions.values()).noneMatch(x -> x.getValue().equals(transactionType))) {
-            throw new MyTransactionException("Uncorrected operation!", HttpStatus.UNPROCESSABLE_ENTITY);
-        }
-    }
+//    private void checkCorrectTransactionOperation(String transactionType) throws MyTransactionException {
+//        if (Arrays.stream(AvailableOperations.values()).noneMatch(x -> x.getValue().equals(transactionType))) {
+//            throw new MyTransactionException("Uncorrected operation!", HttpStatus.UNPROCESSABLE_ENTITY);
+//        }
+//    }
 
     private boolean checkWalletEnoughFunds(BigDecimal operationFunds, BigDecimal walletFunds) {
         return walletFunds.compareTo(operationFunds) > 0;
@@ -134,6 +133,4 @@ public class TransactionsServiceImpl implements TransactionsService {
                 walletEntity.getAccount()
         ));
     }
-
-
 }

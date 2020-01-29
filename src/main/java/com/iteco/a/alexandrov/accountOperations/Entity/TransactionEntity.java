@@ -1,5 +1,6 @@
 package com.iteco.a.alexandrov.accountOperations.Entity;
 
+import com.iteco.a.alexandrov.accountOperations.Validator.ValidOperationType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Length;
 
@@ -31,8 +32,9 @@ public class TransactionEntity {
     @Column(nullable = false)
     private String walletName;
 
-    @Length(max = 3)
+//    @Length(max = 3)
     @Column(nullable = false)
+    @ValidOperationType
     private String transactionType;
 
     @Positive
@@ -136,7 +138,7 @@ public class TransactionEntity {
                 walletName.equals(that.walletName) &&
                 transactionType.equals(that.transactionType) &&
                 transactionAmount.equals(that.transactionAmount) &&
-                Objects.equals(walletAccountAfterTransaction, that.walletAccountAfterTransaction) &&
+                walletAccountAfterTransaction.equals(that.walletAccountAfterTransaction) &&
                 transactionalDate.equals(that.transactionalDate);
     }
 

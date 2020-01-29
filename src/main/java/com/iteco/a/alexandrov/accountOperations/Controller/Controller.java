@@ -3,7 +3,7 @@ package com.iteco.a.alexandrov.accountOperations.Controller;
 
 import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
-import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.CustomResponse.CustomErrorResponse;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
@@ -57,7 +57,7 @@ public class Controller {
     }
 
     @DeleteMapping(value = "/wallets/{id}")
-    public ResponseEntity<WalletEntity> deleteWallet(@PathVariable("id") long id) throws MyWalletException {
+    public ResponseEntity<WalletEntity> deleteWallet(@PathVariable("id") long id) throws MyWalletException, MyTransactionException {
         log.info("Delete Wallet with id = {}", id);
         return walletsService.deleteWallet(id);
     }
@@ -69,7 +69,7 @@ public class Controller {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-
+    @ResponseBody
     @GetMapping("/wallets/transactions")
     public ResponseEntity<List<TransactionEntity>> readAllTransactionsOfAllWallets() {
         return transactionsService.findAllTransactionsFromAllWallets();

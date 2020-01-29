@@ -1,5 +1,6 @@
 package com.iteco.a.alexandrov.accountOperations.Model;
 
+import com.iteco.a.alexandrov.accountOperations.Validator.ValidOperationType;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Min;
@@ -17,7 +18,8 @@ public class TransactionModel {
 
     @NotNull
     @NotBlank
-    @Length(max = 3)
+//    @Length(max = 3)
+    @ValidOperationType
     private String transactionType;
 
     @NotNull

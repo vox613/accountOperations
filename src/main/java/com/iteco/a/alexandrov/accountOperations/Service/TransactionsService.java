@@ -1,7 +1,7 @@
 package com.iteco.a.alexandrov.accountOperations.Service;
 
 import com.iteco.a.alexandrov.accountOperations.Entity.TransactionEntity;
-import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.CustomResponse.CustomErrorResponse;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;

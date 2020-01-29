@@ -3,10 +3,11 @@ package com.iteco.a.alexandrov.accountOperations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
-import com.iteco.a.alexandrov.accountOperations.Enum.AvailableTransactions;
+import com.iteco.a.alexandrov.accountOperations.Enum.AvailableOperations;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Model.TransactionModel;
 import com.iteco.a.alexandrov.accountOperations.Repository.WalletsRepository;
+import com.iteco.a.alexandrov.accountOperations.Service.WalletsServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -41,7 +42,11 @@ public class TransactionTests {
     @Autowired
     private WalletsRepository walletsRepository;
 
+    @Autowired
+    private WalletsServiceImpl walletsService;
+
     private final int threadNum = 20;
+
 
 
     @Test
@@ -62,6 +67,40 @@ public class TransactionTests {
 
 
 
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    public void testParallel_Sum_TransactionsOnOneWallet() throws Exception {
+        final long walletId = 1L;
+        final int numSumOperations = 100;
+        final int numSubOperations = 0;
+        final BigDecimal amountSumOperation = new BigDecimal("100.05");
+        final BigDecimal amountSubOperation = new BigDecimal("0");
+
+        WalletEntity walletForOperations = walletsRepository.findById(walletId).orElseThrow(MyWalletException::new);
+        BigDecimal accountExpected = executeTransaction(walletForOperations, numSumOperations, amountSumOperation, numSubOperations, amountSubOperation);
+        BigDecimal accountActual = walletsRepository.findById(walletId).orElseThrow(MyWalletException::new).getAccount();
+        System.out.println("accountExpected = " + accountExpected + "\naccountActual = " + accountActual);
+        assertEquals(accountExpected, accountActual);
+    }
+
+
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    public void testParallel_Sub_TransactionsOnOneWallet() throws Exception {
+        final long walletId = 2L;
+        final int numSumOperations = 0;
+        final int numSubOperations = 110;
+        final BigDecimal amountSumOperation = new BigDecimal("0");
+        final BigDecimal amountSubOperation = new BigDecimal("100.05");
+
+        WalletEntity walletForOperations = walletsRepository.findById(walletId).orElseThrow(MyWalletException::new);
+        BigDecimal accountExpected = executeTransaction(walletForOperations, numSumOperations, amountSumOperation, numSubOperations, amountSubOperation);
+        BigDecimal accountActual = walletsRepository.findById(walletId).orElseThrow(MyWalletException::new).getAccount();
+        System.out.println("accountExpected = " + accountExpected + "\naccountActual = " + accountActual);
+        assertEquals(accountExpected, accountActual);
+    }
+
 
     private BigDecimal executeTransaction(WalletEntity walletForOperations,
                                           int numSumOperations, BigDecimal amountSumOperation,
@@ -69,18 +108,23 @@ public class TransactionTests {
 
         ExecutorService executor = Executors.newFixedThreadPool(threadNum);
 
-        List<Callable<String>> taskSet = createTaskSet(walletForOperations.getId(), numSumOperations, amountSumOperation, numSubOperations, amountSubOperation);
+        List<Callable<String>> taskSet = createTaskSet(walletForOperations.getId(),
+                numSumOperations, amountSumOperation,
+                numSubOperations, amountSubOperation);
+
         List<Future<String>> futures = executor.invokeAll(taskSet);
         Thread.sleep(1000);
 
-        return calculateExpectedWalletAccountValue(futures, walletForOperations, numSumOperations, numSubOperations, amountSubOperation);
+        return calculateExpectedWalletAccountValue(futures, walletForOperations,
+                numSumOperations, amountSumOperation,
+                numSubOperations, amountSubOperation);
     }
 
 
     private BigDecimal calculateExpectedWalletAccountValue(List<Future<String>> futures,
                                                            WalletEntity walletForOperations,
-                                                           int numSumOperations, int numSubOperations,
-                                                           BigDecimal amount) throws Exception {
+                                                           int numSumOperations, BigDecimal amountSumOperation,
+                                                           int numSubOperations, BigDecimal amountSubOperation) throws Exception {
 
         final BigDecimal numSum = BigDecimal.valueOf(numSumOperations);
         final BigDecimal numSub = BigDecimal.valueOf(numSubOperations);
@@ -92,20 +136,23 @@ public class TransactionTests {
         }
         BigDecimal unsuccessfulTransaction = BigDecimal.valueOf(notEnoughMoneyOperations);
 
-        return ((numSum.multiply(amount))
-                .subtract((numSub.subtract(unsuccessfulTransaction).multiply(amount))))
+        return ((numSum.multiply(amountSumOperation))
+                .subtract(((numSub.subtract(unsuccessfulTransaction)).multiply(amountSubOperation))))
                 .add(startWalletAccount);
     }
 
 
     private List<Callable<String>> createTaskSet(long walletId,
                                                  int numSumOperations, BigDecimal amountSumOperation,
-                                                 int numSubOperations, BigDecimal amountSubOperation) {
+                                                 int numSubOperations, BigDecimal amountSubOperation) throws MyWalletException {
 
-        Callable<String> callableTaskSum = () -> initTransactionOperation(walletId, AvailableTransactions.SUM, amountSumOperation);
-        Callable<String> callableTaskSub = () -> initTransactionOperation(walletId, AvailableTransactions.SUB, amountSubOperation);
+        Callable<String> callableTaskSum = () ->
+                initTransactionOperation(walletId, AvailableOperations.SUM, amountSumOperation);
 
-        List<Callable<String>> taskSet = new ArrayList<>();
+        Callable<String> callableTaskSub = () ->
+                initTransactionOperation(walletId, AvailableOperations.SUB, amountSubOperation);
+
+        List<Callable<String>> taskSet = new ArrayList<>(numSumOperations + numSubOperations);
         for (int i = 0; i < numSumOperations; i++) {
             taskSet.add(callableTaskSum);
         }
@@ -116,7 +163,7 @@ public class TransactionTests {
     }
 
 
-    private String initTransactionOperation(Long walletId, AvailableTransactions operation, BigDecimal amount) {
+    private String initTransactionOperation(Long walletId, AvailableOperations operation, BigDecimal amount) {
         String contentAsString = null;
         try {
             contentAsString = mockMvc.perform(post("/rest/wallets/transactions")

@@ -1,6 +1,6 @@
 INSERT INTO wallets_table (id, account, wallet_name, create_date_time)
 VALUES (nextval('wallet_id_seq'), 1, 'acc1', CURRENT_TIMESTAMP),
-       (nextval('wallet_id_seq'), 0, 'acc2', CURRENT_TIMESTAMP),
+       (nextval('wallet_id_seq'), 10005.05, 'acc2', CURRENT_TIMESTAMP),
        (nextval('wallet_id_seq'), 0, 'acc3', CURRENT_TIMESTAMP);
 
 

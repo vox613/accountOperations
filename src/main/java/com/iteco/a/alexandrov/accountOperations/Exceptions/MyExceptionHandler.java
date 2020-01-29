@@ -1,6 +1,6 @@
 package com.iteco.a.alexandrov.accountOperations.Exceptions;
 
-import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.CustomResponse.CustomErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

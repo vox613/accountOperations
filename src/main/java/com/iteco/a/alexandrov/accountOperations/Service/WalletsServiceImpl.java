@@ -1,7 +1,8 @@
 package com.iteco.a.alexandrov.accountOperations.Service;
 
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
-import com.iteco.a.alexandrov.accountOperations.Exceptions.Error.CustomErrorResponse;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.CustomResponse.CustomErrorResponse;
+import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Repository.WalletsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,6 @@ public class WalletsServiceImpl implements WalletsService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyWalletException.class)
     public ResponseEntity<WalletEntity> createWallet(WalletEntity newWallet) throws MyWalletException {
         log.warn("Wallet = " + newWallet);
         if (checkWalletWithSameNameExist(newWallet.getWalletName())) {
@@ -60,13 +60,11 @@ public class WalletsServiceImpl implements WalletsService {
         return walletsRepository.existsByWalletName(walletName);
     }
 
-
     public ResponseEntity<CustomErrorResponse> responseCreater(String responseBody, HttpStatus status) {
         return new ResponseEntity<>(new CustomErrorResponse(responseBody), status);
     }
 
 
-    // TODO: 24.01.2020 Нужна ли транзакция, накинуть лок для базы
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE, rollbackFor = MyWalletException.class)
     public ResponseEntity<WalletEntity> updateWallet(long id, WalletEntity newWallet) throws MyWalletException {
@@ -79,7 +77,6 @@ public class WalletsServiceImpl implements WalletsService {
             oldWalletEntity.setAccount(newWallet.getAccount());
             oldWalletEntity.setWalletName(newWallet.getWalletName());
 
-
             walletsRepository.updateWallet(oldWalletEntity.getId(), oldWalletEntity.getAccount(),
                     oldWalletEntity.getWalletName());
 
@@ -91,11 +88,9 @@ public class WalletsServiceImpl implements WalletsService {
         }
     }
 
-    // TODO: 24.01.2020 добавить транзакцию на эти операции
     @Override
-    public ResponseEntity<WalletEntity> deleteWallet(long id) throws MyWalletException {
-        log.info("Deleting User with id {}", id);
-
+    public ResponseEntity<WalletEntity> deleteWallet(long id) throws MyWalletException, MyTransactionException {
+        log.info("Deleting Wallet with id {}", id);
         Optional<WalletEntity> optionalWalletEntity = walletsRepository.findById(id);
 
         if (optionalWalletEntity.isPresent()) {
@@ -107,13 +102,10 @@ public class WalletsServiceImpl implements WalletsService {
         }
     }
 
-
     @Override
     public ResponseEntity<CustomErrorResponse> deleteAllWallets() {
         log.info("Deleting All Wallet");
         walletsRepository.deleteAll();
         return responseCreater("", HttpStatus.NO_CONTENT);
     }
-
-
 }
