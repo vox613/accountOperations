@@ -20,7 +20,6 @@ public class WalletEntity {
     @SequenceGenerator(
             name = "pk_wallet_sequence",
             sequenceName = "wallet_id_seq",
-            initialValue = 1,
             allocationSize = 1)
     private Long id;
 
@@ -36,7 +35,6 @@ public class WalletEntity {
 
     @Column
     @CreationTimestamp
-//    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
     private LocalDateTime createDateTime;
 
     public WalletEntity() {

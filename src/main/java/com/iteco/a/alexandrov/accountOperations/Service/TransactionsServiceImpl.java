@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,40 +70,45 @@ public class TransactionsServiceImpl implements TransactionsService {
     }
 
 
+    /**
+     * Creates transaction for wallet.
+     * If there is not enough funds on wallet balance, throws WalletException
+     * If transactionType= "sum" takes transactionAmount from  @param transactionModel  and adds it to wallet balance.
+     * If transactionType= "sub" takes transactionAmount from  @param transactionModel  and subtracts it from wallet balance.
+     * Valid refence to transaction type, currency, wallet should be provided.
+     * Global id should be unique.
+     *
+     * Set isolation = Isolation.SERIALIZABLE in order to avoid concurrency issues
+     * Set propagation = Propagation.REQUIRES_NEW to create a unique transaction independent of other operations
+     * Set rollbackFor = Exception.class to roll back the wallet and transaction history log in case of exceptional situations
+     *
+     * @param transactionModel - transaction model providing the necessary data to complete the operation
+     * @return created transaction
+     * @throws MyTransactionException if couldn't create transaction
+     */
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.SERIALIZABLE, rollbackFor = Exception.class)
     public ResponseEntity<CustomErrorResponse> createTransaction(TransactionModel transactionModel) throws MyTransactionException {
 
         WalletEntity walletEntity = checkWalletExist(transactionModel.getWalletId());
-
         String operation = transactionModel.getTransactionType().toLowerCase();
-//        checkCorrectTransactionOperation(operation);
 
         if (operation.equals(AvailableOperations.SUB.getValue())) {
             subTransactionExecution(walletEntity, transactionModel);
         } else if (operation.equals(AvailableOperations.SUM.getValue())) {
             sumTransactionExecution(walletEntity, transactionModel);
         }
-
         createJournalLog(walletEntity, transactionModel);
-
         entityManager.lock(walletEntity, LockModeType.NONE);
         return walletsService.responseCreater("Success transaction!", HttpStatus.CREATED);
     }
 
-
-    private WalletEntity checkWalletExist(Long walletId) throws MyTransactionException {
+    WalletEntity checkWalletExist(Long walletId) throws MyTransactionException {
         return Optional.ofNullable(entityManager.find(WalletEntity.class, walletId, LockModeType.PESSIMISTIC_WRITE))
                 .orElseThrow(() ->
                         new MyTransactionException("Wallet by ID not found!", HttpStatus.NOT_FOUND)
                 );
     }
-
-//    private void checkCorrectTransactionOperation(String transactionType) throws MyTransactionException {
-//        if (Arrays.stream(AvailableOperations.values()).noneMatch(x -> x.getValue().equals(transactionType))) {
-//            throw new MyTransactionException("Uncorrected operation!", HttpStatus.UNPROCESSABLE_ENTITY);
-//        }
-//    }
 
     private boolean checkWalletEnoughFunds(BigDecimal operationFunds, BigDecimal walletFunds) {
         return walletFunds.compareTo(operationFunds) > 0;

@@ -20,7 +20,6 @@ public class TransactionEntity {
     @SequenceGenerator(
             name = "pk_transactional_sequence",
             sequenceName = "transactional_id_seq",
-            initialValue = 1,
             allocationSize = 1)
     private long id;
 
@@ -32,7 +31,6 @@ public class TransactionEntity {
     @Column(nullable = false)
     private String walletName;
 
-//    @Length(max = 3)
     @Column(nullable = false)
     @ValidOperationType
     private String transactionType;
@@ -47,7 +45,6 @@ public class TransactionEntity {
 
     @Column
     @UpdateTimestamp
-//    @JsonFormat(pattern = "dd-MM-yyyy hh:mm:ss")
     private LocalDateTime transactionalDate;
 
 

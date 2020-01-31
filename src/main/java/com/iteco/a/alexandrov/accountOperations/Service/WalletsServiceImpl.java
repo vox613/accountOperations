@@ -2,7 +2,6 @@ package com.iteco.a.alexandrov.accountOperations.Service;
 
 import com.iteco.a.alexandrov.accountOperations.Entity.WalletEntity;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.CustomResponse.CustomErrorResponse;
-import com.iteco.a.alexandrov.accountOperations.Exceptions.MyTransactionException;
 import com.iteco.a.alexandrov.accountOperations.Exceptions.MyWalletException;
 import com.iteco.a.alexandrov.accountOperations.Repository.WalletsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,17 +46,15 @@ public class WalletsServiceImpl implements WalletsService {
 
     @Override
     public ResponseEntity<WalletEntity> createWallet(WalletEntity newWallet) throws MyWalletException {
-        log.warn("Wallet = " + newWallet);
-        if (checkWalletWithSameNameExist(newWallet.getWalletName())) {
-            log.warn("Created wallet: = " + newWallet);
-            throw new MyWalletException("Wallet with same name exist!", HttpStatus.UNPROCESSABLE_ENTITY);
-        }
-        WalletEntity save = walletsRepository.save(newWallet);
-        return new ResponseEntity<>(save, HttpStatus.CREATED);
+        checkWalletWithSameNameExist(newWallet.getWalletName());
+        log.warn("Create wallet: = " + newWallet);
+        return new ResponseEntity<>(walletsRepository.save(newWallet), HttpStatus.CREATED);
     }
 
-    private boolean checkWalletWithSameNameExist(String walletName) {
-        return walletsRepository.existsByWalletName(walletName);
+    private void checkWalletWithSameNameExist(String walletName) throws MyWalletException {
+        if (walletsRepository.existsByWalletName(walletName)) {
+            throw new MyWalletException("Wallet with same name exist!", HttpStatus.UNPROCESSABLE_ENTITY);
+        }
     }
 
     public ResponseEntity<CustomErrorResponse> responseCreater(String responseBody, HttpStatus status) {
@@ -70,9 +67,11 @@ public class WalletsServiceImpl implements WalletsService {
     public ResponseEntity<WalletEntity> updateWallet(long id, WalletEntity newWallet) throws MyWalletException {
         log.info("Updating Wallet with id {}", id);
 
+
         Optional<WalletEntity> walletEntityOptional = walletsRepository.findById(id);
 
         if (walletEntityOptional.isPresent()) {
+            checkWalletWithSameNameExist(newWallet.getWalletName());
             WalletEntity oldWalletEntity = walletEntityOptional.get();
             oldWalletEntity.setAccount(newWallet.getAccount());
             oldWalletEntity.setWalletName(newWallet.getWalletName());
@@ -89,7 +88,7 @@ public class WalletsServiceImpl implements WalletsService {
     }
 
     @Override
-    public ResponseEntity<WalletEntity> deleteWallet(long id) throws MyWalletException, MyTransactionException {
+    public ResponseEntity<WalletEntity> deleteWallet(long id) throws MyWalletException {
         log.info("Deleting Wallet with id {}", id);
         Optional<WalletEntity> optionalWalletEntity = walletsRepository.findById(id);
 

@@ -19,7 +19,6 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
 
-
     @ExceptionHandler(value = {MyTransactionException.class})
     public ResponseEntity<CustomErrorResponse> handleTransactionalException(MyTransactionException ex) {
         logger.error(ex.toString());

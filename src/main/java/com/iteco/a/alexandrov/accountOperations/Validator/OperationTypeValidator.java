@@ -21,10 +21,7 @@ public class OperationTypeValidator implements ConstraintValidator<ValidOperatio
 
 
     private boolean checkCorrectTransactionOperation(String transactionType) {
-        if (Arrays.stream(AvailableOperations.values()).noneMatch(x -> x.getValue().equals(transactionType.toLowerCase()))) {
-//            throw new MyTransactionException("Uncorrected operation!", HttpStatus.UNPROCESSABLE_ENTITY);
-            return false;
-        }
-        return true;
+        return Arrays.stream(AvailableOperations.values())
+                .anyMatch(x -> x.getValue().equals(transactionType.toLowerCase()));
     }
 }

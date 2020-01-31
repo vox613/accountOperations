@@ -1,5 +1,8 @@
 package com.iteco.a.alexandrov.accountOperations.Enum;
 
+/**
+ * Contains valid wallet account transaction transactions
+ */
 public enum AvailableOperations {
     SUM("sum"),
     SUB("sub");

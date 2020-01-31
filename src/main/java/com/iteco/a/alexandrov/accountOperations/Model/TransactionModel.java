@@ -1,7 +1,6 @@
 package com.iteco.a.alexandrov.accountOperations.Model;
 
 import com.iteco.a.alexandrov.accountOperations.Validator.ValidOperationType;
-import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
@@ -9,6 +8,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
 
+/**
+ * Contains data for a wallet account transaction
+ */
 public class TransactionModel {
 
     @NotNull
@@ -18,7 +20,6 @@ public class TransactionModel {
 
     @NotNull
     @NotBlank
-//    @Length(max = 3)
     @ValidOperationType
     private String transactionType;
 
